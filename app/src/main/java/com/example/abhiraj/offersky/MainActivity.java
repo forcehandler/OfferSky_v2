@@ -1,5 +1,8 @@
 package com.example.abhiraj.offersky;
 
+import android.content.Context;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
@@ -18,6 +21,7 @@ import android.view.View;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
+import com.example.abhiraj.offersky.drawable.BadgeDrawable;
 import com.example.abhiraj.offersky.fragment.TestFragment;
 
 import butterknife.BindView;
@@ -31,6 +35,7 @@ public class MainActivity extends AppCompatActivity
 
 
     private enum TabState {Shopping, Food};
+    LayerDrawable notification_icon;
 
     private TabState tabState = TabState.Shopping;
 
@@ -57,6 +62,7 @@ public class MainActivity extends AppCompatActivity
             public void onClick(View view) {
                 Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
                         .setAction("Action", null).show();
+                setBadgeCount(MainActivity.this, notification_icon, "7");
             }
         });
 
@@ -89,6 +95,10 @@ public class MainActivity extends AppCompatActivity
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
         getMenuInflater().inflate(R.menu.main, menu);
+
+        MenuItem itemCart = menu.findItem(R.id.action_cart);
+        notification_icon = (LayerDrawable) itemCart.getIcon();
+        setBadgeCount(this, notification_icon, "9");
         return true;
     }
 
@@ -100,7 +110,9 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
+        if (id == R.id.action_cart) {
+            Log.d(TAG, "cart clicked");
+            setBadgeCount(this, notification_icon, "0");
             return true;
         }
 
@@ -292,5 +304,24 @@ public class MainActivity extends AppCompatActivity
         //Log.d(TAG, "tab " + tab.getPosition() + " relected");
     }
 
+
+    public static void setBadgeCount(Context context, LayerDrawable icon, String count) {
+
+        BadgeDrawable badge;
+
+        // Reuse drawable if possible
+        Drawable reuse = icon.findDrawableByLayerId(R.id.ic_badge);
+        if (reuse != null && reuse instanceof BadgeDrawable) {
+            badge = (BadgeDrawable) reuse;
+        } else {
+            badge = new BadgeDrawable(context);
+        }
+
+        Log.d(TAG, "setting badge count to " + count);
+        badge.setCount(count);
+        icon.mutate();
+        icon.setDrawableByLayerId(R.id.ic_badge, badge);
+
+    }
 
 }
