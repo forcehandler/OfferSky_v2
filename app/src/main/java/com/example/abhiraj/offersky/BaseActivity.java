@@ -5,7 +5,6 @@ import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
-import static com.example.abhiraj.offersky.utils.LogUtils.*;
 
 /**
  * Created by Abhiraj on 14-04-2017.
