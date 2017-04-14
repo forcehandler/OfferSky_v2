@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.v4.widget.NestedScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/content_main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    app:layout_behavior="@string/appbar_scrolling_view_behavior"
+    android:paddingBottom="@dimen/activity_vertical_margin"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin"
+    android:paddingTop="@dimen/activity_vertical_margin"
+
+    tools:context="com.example.abhiraj.offersky.MainActivity"
+    tools:showIn="@layout/app_bar_main">
+
+
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:text="yolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+           yolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+           yolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+           yolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+            yolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitchesyolobitches
+           scroll : This flag is generally set for all views that need to scroll off-screen. Views that don’t use this flag remain static allowing the other scrollable views to slide behind it
+enterAlways : This flag ensures that any downward scroll will cause the view to become visible, enabling the quick return pattern
+enterAlwaysCollapsed : An additional flag for ‘enterAlways’ which modifies the returning view to only initially scroll back to it’s collapsed height.
+exitUntilCollapsed : This flag causes the view to be scrolled until it is collapsed (its minHeight is reached) before exiting
+snap : Upon a sscroll : This flag is generally set for all views that need to scroll off-screen. Views that don’t use this flag remain static allowing the other scrollable views to slide behind it
+enterAlways : This flag ensures that any downward scroll will cause the view to become visible, enabling the quick return pattern
+enterAlwaysCollapsed : An additional flag for ‘enterAlways’ which modifies the returning view to only initially scroll back to it’s collapsed height.
+exitUntilCollapsed : This flag causes the view to be scrolled until it is collapsed (its minHeight is reached) before exiting
+snap : Upon a s"/>
+
+
+
+</android.support.v4.widget.NestedScrollView>
