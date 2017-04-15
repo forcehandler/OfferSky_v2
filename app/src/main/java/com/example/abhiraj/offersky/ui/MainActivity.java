@@ -1,4 +1,4 @@
-package com.example.abhiraj.offersky;
+package com.example.abhiraj.offersky.ui;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
@@ -25,6 +25,7 @@ import android.view.View;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
+import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.ShopAdapter;
 import com.example.abhiraj.offersky.drawable.BadgeDrawable;
 import com.example.abhiraj.offersky.model.Shop;
@@ -337,8 +338,6 @@ public class MainActivity extends AppCompatActivity
                 return a.getName().compareTo(b.getName());
             }
         };
-
-        ShopAdapter shopAdapter;
         shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(shopAdapter);
