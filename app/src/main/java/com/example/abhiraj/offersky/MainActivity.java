@@ -13,6 +13,8 @@ import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -21,14 +23,19 @@ import android.view.View;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
+import com.example.abhiraj.offersky.adapter.ShopAdapter;
 import com.example.abhiraj.offersky.drawable.BadgeDrawable;
-import com.example.abhiraj.offersky.fragment.TestFragment;
+import com.example.abhiraj.offersky.model.Shop;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener {
+        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TABSTATE_KEY = "tabstate";
@@ -39,9 +46,12 @@ public class MainActivity extends AppCompatActivity
 
     private TabState tabState = TabState.Shopping;
 
+
     @BindView(R.id.fab) FloatingActionButton fab;
     @BindView(R.id.tabs) TabLayout tabLayout;
     @BindView(R.id.bottom_navigation) AHBottomNavigation bottomNavigation;
+    @BindView(R.id.recycler_view)
+    RecyclerView recyclerView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -75,9 +85,14 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        // Setup test RecyclerView
+        setupTestRecyclerView();
+
         // UI functions
         createTabLayout();
         setupBottomNavigation();
+
+
     }
 
 
@@ -210,7 +225,7 @@ public class MainActivity extends AppCompatActivity
         Log.d(TAG, "btab " + position + " selected" + " and wasSelected = " + wasSelected+"");
         FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
-        switch (position){
+        /*switch (position){
 
             case 0:
                 switch (tabState){
@@ -253,7 +268,7 @@ public class MainActivity extends AppCompatActivity
                 }
                 return true;
 
-        }
+        }*/
         return false;
     }
 
@@ -305,6 +320,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    // Function for setting the badge for the toolbar icons
     public static void setBadgeCount(Context context, LayerDrawable icon, String count) {
 
         BadgeDrawable badge;
@@ -322,6 +338,34 @@ public class MainActivity extends AppCompatActivity
         icon.mutate();
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
 
+    }
+
+    private void setupTestRecyclerView(){
+
+        Log.d(TAG, "setupTestRecyclerView()");
+        final Comparator<Shop> ALPHABETICAL_COMPARATOR = new Comparator<Shop>() {
+            @Override
+            public int compare(Shop a, Shop b) {
+                return a.getName().compareTo(b.getName());
+            }
+        };
+
+        ShopAdapter shopAdapter;
+        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(shopAdapter);
+
+        List<Shop> mModels = new ArrayList<>();
+        Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
+        mModels.add(s1);
+        shopAdapter.edit().replaceAll(mModels)
+                .commit();
+
+    }
+
+    @Override
+    public void onShopClick(int position) {
+        Log.d(TAG, "shop at " + position + " clicked");
     }
 
 }
