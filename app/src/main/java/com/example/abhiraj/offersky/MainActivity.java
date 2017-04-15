@@ -10,11 +10,13 @@ import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
+import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SearchView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -35,7 +37,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class MainActivity extends AppCompatActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener {
+        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener, SearchView.OnQueryTextListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TABSTATE_KEY = "tabstate";
@@ -114,6 +116,10 @@ public class MainActivity extends AppCompatActivity
         MenuItem itemCart = menu.findItem(R.id.action_cart);
         notification_icon = (LayerDrawable) itemCart.getIcon();
         setBadgeCount(this, notification_icon, "9");
+
+        final MenuItem searchItem = menu.findItem(R.id.action_search);
+        final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
+        searchView.setOnQueryTextListener(this);
         return true;
     }
 
@@ -320,6 +326,65 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    ShopAdapter shopAdapter;
+    List<Shop> mModels;
+    private void setupTestRecyclerView(){
+
+        Log.d(TAG, "setupTestRecyclerView()");
+        final Comparator<Shop> ALPHABETICAL_COMPARATOR = new Comparator<Shop>() {
+            @Override
+            public int compare(Shop a, Shop b) {
+                return a.getName().compareTo(b.getName());
+            }
+        };
+
+        ShopAdapter shopAdapter;
+        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
+        recyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recyclerView.setAdapter(shopAdapter);
+
+        mModels = new ArrayList<>();
+        Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
+        mModels.add(s1);
+        shopAdapter.edit().replaceAll(mModels)
+                .commit();
+
+    }
+
+    @Override
+    public void onShopClick(int position) {
+        Log.d(TAG, "shop at " + position + " clicked");
+    }
+
+    @Override
+    public boolean onQueryTextSubmit(String query) {
+        return false;
+    }
+
+    @Override
+    public boolean onQueryTextChange(String newText) {
+        final List<Shop> filteredModelList = filter(mModels, newText);
+        shopAdapter.edit()
+                .replaceAll(filteredModelList)
+                .commit();
+        recyclerView.scrollToPosition(0);
+        return true;
+    }
+
+    // TODO: Change filter logic to filtering according to shop category
+    private static List<Shop> filter(List<Shop> models, String query) {
+        final String lowerCaseQuery = query.toLowerCase();
+
+        final List<Shop> filteredModelList = new ArrayList<>();
+        for (Shop model : models) {
+            final String text = model.getName().toLowerCase();
+            if (text.contains(lowerCaseQuery)) {
+                filteredModelList.add(model);
+            }
+        }
+        return filteredModelList;
+    }
+
     // Function for setting the badge for the toolbar icons
     public static void setBadgeCount(Context context, LayerDrawable icon, String count) {
 
@@ -339,33 +404,4 @@ public class MainActivity extends AppCompatActivity
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
 
     }
-
-    private void setupTestRecyclerView(){
-
-        Log.d(TAG, "setupTestRecyclerView()");
-        final Comparator<Shop> ALPHABETICAL_COMPARATOR = new Comparator<Shop>() {
-            @Override
-            public int compare(Shop a, Shop b) {
-                return a.getName().compareTo(b.getName());
-            }
-        };
-
-        ShopAdapter shopAdapter;
-        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
-        recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        recyclerView.setAdapter(shopAdapter);
-
-        List<Shop> mModels = new ArrayList<>();
-        Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
-        mModels.add(s1);
-        shopAdapter.edit().replaceAll(mModels)
-                .commit();
-
-    }
-
-    @Override
-    public void onShopClick(int position) {
-        Log.d(TAG, "shop at " + position + " clicked");
-    }
-
 }
