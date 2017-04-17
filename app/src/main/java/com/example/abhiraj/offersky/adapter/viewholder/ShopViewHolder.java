@@ -22,9 +22,9 @@ public class ShopViewHolder extends SortedListAdapter.ViewHolder<Shop> implement
     private View mView;
     private ShopAdapter.ShopClickListener mShopClickListener;
 
-    @BindView(R.id.shop_name)
+    @BindView(R.id.tv_shop_name)
     TextView shop_name_tv;
-    @BindView(R.id.brand_image)
+    @BindView(R.id.iv_brand_image)
     ImageView brand_image_iv;
     public ShopViewHolder(View view, ShopAdapter.ShopClickListener shopClickListener) {
         super(view);

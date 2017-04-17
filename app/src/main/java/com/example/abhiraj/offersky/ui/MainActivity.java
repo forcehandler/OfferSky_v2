@@ -1,6 +1,7 @@
 package com.example.abhiraj.offersky.ui;
 
 import android.content.Context;
+import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -8,7 +9,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
-import android.support.v4.app.FragmentTransaction;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
@@ -44,7 +44,7 @@ public class MainActivity extends AppCompatActivity
     private static final String TABSTATE_KEY = "tabstate";
 
 
-    private enum TabState {Shopping, Food};
+    private enum TabState {Shopping, Food}
     LayerDrawable notification_icon;
 
     private TabState tabState = TabState.Shopping;
@@ -148,8 +148,14 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
 
         if (id == R.id.nav_camera) {
-            // Handle the camera action
+            Intent intent = new Intent(MainActivity.this, FilterActivity.class);
+            intent.putExtra("Title", "Category");
+            startActivity(intent);
+
         } else if (id == R.id.nav_gallery) {
+            Intent intent = new Intent(MainActivity.this, FilterActivity.class);
+            intent.putExtra("Title", "Category");
+            startActivity(intent);
 
         } else if (id == R.id.nav_slideshow) {
 
@@ -226,23 +232,21 @@ public class MainActivity extends AppCompatActivity
         }
     }
 
+    // TODO: Properly Implement bottom nav tab selection and replace fragments with category filter logic
     @Override
     public boolean onTabSelected(int position, boolean wasSelected) {
 
         Log.d(TAG, "btab " + position + " selected" + " and wasSelected = " + wasSelected+"");
-        FragmentTransaction fragmentTransaction = getSupportFragmentManager().beginTransaction();
 
-        /*switch (position){
+        switch (position){
 
             case 0:
                 switch (tabState){
                     case Shopping:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Shopping tab 1"))
-                                .commit();
+
                         break;
                     case Food:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Food tab 1"))
-                                .commit();;
+
                         break;
 
                 }
@@ -251,12 +255,10 @@ public class MainActivity extends AppCompatActivity
             case 1:
                 switch (tabState){
                     case Shopping:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Shopping tab 2"))
-                                .commit();;
+
                         break;
                     case Food:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Food tab 2"))
-                                .commit();;
+
                         break;
                 }
                 return true;
@@ -264,18 +266,16 @@ public class MainActivity extends AppCompatActivity
             case 2:
                 switch (tabState){
                     case Shopping:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Shopping tab 3"))
-                                .commit();;
+
                         break;
                     case Food:
-                        fragmentTransaction.replace(R.id.fragment_container, TestFragment.newInstance("Food tab 3"))
-                                .commit();;
+
                         break;
 
                 }
                 return true;
 
-        }*/
+        }
         return false;
     }
 
@@ -290,12 +290,20 @@ public class MainActivity extends AppCompatActivity
                 case Shopping:
                     Log.d(TAG, "shopping tab select");
                     TabLayout.Tab s_tab = tabLayout.getTabAt(0);
-                    s_tab.select();
+                    try {
+                        s_tab.select();
+                    }catch (Exception e){
+                        Log.e(TAG, e.toString());
+                    }
                     break;
                 case Food:
                     Log.d(TAG, "food tab select");
                     TabLayout.Tab f_tab = tabLayout.getTabAt(0);
-                    f_tab.select();
+                    try {
+                        f_tab.select();
+                    }catch (Exception e){
+                        Log.e(TAG, e.toString());
+                    }
                     break;
             }
         }
@@ -327,6 +335,7 @@ public class MainActivity extends AppCompatActivity
     }
 
 
+    // TODO: Replace TestReyclerView with proper Implementation
     ShopAdapter shopAdapter;
     List<Shop> mModels;
     private void setupTestRecyclerView(){
@@ -350,9 +359,13 @@ public class MainActivity extends AppCompatActivity
 
     }
 
+    // TODO: Improve the code by moving keys to constants class
     @Override
     public void onShopClick(int position) {
         Log.d(TAG, "shop at " + position + " clicked");
+        Intent intent = new Intent(MainActivity.this, ShopDetailsActivity.class);
+        intent.putExtra("ShopId", mModels.get(position).getShopId());
+        startActivity(intent);
     }
 
     @Override

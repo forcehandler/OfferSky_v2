@@ -27,13 +27,13 @@ public class ShopAdapter extends SortedListAdapter<Shop>{
 
     @Override
     protected ViewHolder<? extends Shop> onCreateViewHolder(LayoutInflater inflater, ViewGroup parent, int i) {
-        final View view =inflater.inflate(R.layout.shop_item, parent, false);
+        final View view =inflater.inflate(R.layout.shop_card, parent, false);
         return new ShopViewHolder(view, mShopClickListener);
     }
 
     @Override
     protected boolean areItemsTheSame(Shop shop, Shop t1) {
-        return shop.getShopId() == t1.getShopId();
+        return shop.getShopId().equals(t1.getShopId());
     }
 
     @Override
@@ -43,6 +43,6 @@ public class ShopAdapter extends SortedListAdapter<Shop>{
 
     public interface ShopClickListener{
 
-        public void onShopClick(int position);
+        void onShopClick(int position);
     }
 }
