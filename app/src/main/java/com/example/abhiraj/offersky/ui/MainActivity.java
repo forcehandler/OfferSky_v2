@@ -24,7 +24,6 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
@@ -43,6 +42,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
+
 public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener, SearchView.OnQueryTextListener {
 
@@ -54,6 +54,7 @@ public class MainActivity extends BaseActivity
     LayerDrawable notification_icon;
 
     private TabState tabState = TabState.Shopping;
+    private boolean isMallReady = false;
 
 
     @BindView(R.id.fab) FloatingActionButton fab;
@@ -97,6 +98,7 @@ public class MainActivity extends BaseActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
+        // TODO: Replace with proper implementation
         // Get malls
         FirebaseUtils.getMall(this, "GA_0832_MDG");
         // Show loading dialog
@@ -106,7 +108,6 @@ public class MainActivity extends BaseActivity
         createTabLayout();
         setupBottomNavigation();
 
-        navigationTest("test");
     }
 
 
@@ -178,10 +179,12 @@ public class MainActivity extends BaseActivity
 
         }
 
-        else if(item.getTitle().equals("Runtime item 1")){
-            Toast.makeText(this, "item 1" , Toast.LENGTH_SHORT).show();
+        // Get the name of the item clicked in drawer and pass it along to the new filter activity
+        else{
+            Intent intent = new Intent(MainActivity.this, FilterActivity.class);
+            intent.putExtra("Title", item.getTitle());
+            startActivity(intent);
         }
-
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -243,6 +246,7 @@ public class MainActivity extends BaseActivity
 
                 // set 1st Tab as open
                 bottomNavigation.setCurrentItem(0);
+
                 break;
 
         }
@@ -260,24 +264,26 @@ public class MainActivity extends BaseActivity
             case 0:
                 switch (tabState){
                     case Shopping:
-                            navigationTest("s_t0");
                         break;
                     case Food:
-                        navigationTest("f_t0");
                         break;
 
                 }
+                if(isMallReady)
+                    startFilteringCategory(position);
+                addNavigationItems(0);
                 return true;
 
             case 1:
                 switch (tabState){
                     case Shopping:
-                        navigationTest("s_t1");
                         break;
                     case Food:
-
                         break;
                 }
+                if(isMallReady)
+                    startFilteringCategory(position);
+                addNavigationItems(1);
                 return true;
 
             case 2:
@@ -286,15 +292,20 @@ public class MainActivity extends BaseActivity
 
                         break;
                     case Food:
-                        navigationTest("f_t2");
                         break;
 
                 }
+                if(isMallReady)
+                    startFilteringCategory(position);
+                addNavigationItems(2);
                 return true;
+
 
         }
         return false;
     }
+
+
 
     private void createTabLayout(){
         Log.d(TAG, "createTabLayout()");
@@ -369,7 +380,7 @@ public class MainActivity extends BaseActivity
         recyclerView.setAdapter(shopAdapter);
 
         mModels = new ArrayList<>();
-        //Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
+
         mModels.addAll(FirebaseUtils.sMall.getShops().values());
         shopAdapter.edit().replaceAll(mModels)
                 .commit();
@@ -400,7 +411,7 @@ public class MainActivity extends BaseActivity
         return true;
     }
 
-    // TODO: Change filter logic to filtering according to shop category
+    // TODO: Change filter logic to filter according to shop category
     private static List<Shop> filter(List<Shop> models, String query) {
         final String lowerCaseQuery = query.toLowerCase();
 
@@ -409,6 +420,81 @@ public class MainActivity extends BaseActivity
             final String text = model.getName().toLowerCase();
             if (text.contains(lowerCaseQuery)) {
                 filteredModelList.add(model);
+            }
+        }
+        return filteredModelList;
+    }
+
+    private void startFilteringCategory(int position) {
+
+        List<String> tabFilterCategories = new ArrayList<>();
+        switch (position){
+            case 0:
+                switch (tabState){
+                    case Shopping:
+                        tabFilterCategories.add("Formals");
+                        tabFilterCategories.add("Ethenic");
+                        tabFilterCategories.add("Party wear");
+                        tabFilterCategories.add("Sports wear");
+                        break;
+                    case Food:
+                        tabFilterCategories.add("Meals");
+                        tabFilterCategories.add("Chaat");
+                        tabFilterCategories.add("South Indian");
+                        break;
+                }
+                break;
+
+            case 1:
+                switch (tabState){
+                    case Shopping:
+                        tabFilterCategories.add("Gifts & Toys");
+                        tabFilterCategories.add("Electronics");
+                        tabFilterCategories.add("Books & Music");
+                        tabFilterCategories.add("Games");
+                        break;
+                    case Food:
+                        tabFilterCategories.add("Cafe");
+                        tabFilterCategories.add("Chinese");
+                        break;
+                }
+                break;
+
+            case 2:
+                switch (tabState){
+                    case Shopping:
+                        tabFilterCategories.add("Accessories");
+                        tabFilterCategories.add("Jewellery");
+                        tabFilterCategories.add("Bags");
+                        tabFilterCategories.add("Watches");
+                        break;
+                    case Food:
+                        tabFilterCategories.add("Ice cream");
+                        tabFilterCategories.add("Drinks");
+                        tabFilterCategories.add("Dessert");
+                        break;
+                }
+                break;
+
+        }
+        final List<Shop> filteredModelList = categoryFilter(mModels, tabFilterCategories);
+        shopAdapter.edit()
+                .replaceAll(filteredModelList)
+                .commit();
+        recyclerView.scrollToPosition(0);
+    }
+
+    public static List<Shop> categoryFilter(List<Shop> models, List<String> categories)
+    {
+        final List<Shop> filteredModelList = new ArrayList<>();
+
+        for(String query : categories) {
+
+            for (Shop model : models) {
+
+                if (model.getCategories().values().contains(query)) {
+                    filteredModelList.add(model);
+                }
             }
         }
         return filteredModelList;
@@ -437,20 +523,43 @@ public class MainActivity extends BaseActivity
     private BroadcastReceiver mallDataReadyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "recieved DATA READY broadcast");
             hideProgressDialog();
             setupTestRecyclerView();
+            isMallReady = true;
+            onTabSelected(bottomNavigation.getCurrentItem(), true);
         }
     };
 
-    private void navigationTest(String item) {
+    private void addNavigationItems(int position) {
 
+        List<String> items = new ArrayList<>();
+
+        switch (position){
+
+            case 0:
+                switch (tabState){
+                    case Shopping:
+                        items.add("Formals");
+                        items.add("Ethenic");
+                        items.add("Party wear");
+                        items.add("Sports wear");
+                        break;
+                    case Food:
+                        items.add("Meals");
+                        items.add("Chaat");
+                        items.add("South Indian");
+                        break;
+                }
+                break;
+        }
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         if(navigationView != null){
             final Menu menu = navigationView.getMenu();
             menu.clear();
             navigationView.inflateMenu(R.menu.base);
-            for (int i = 1; i <= 3; i++) {
-                menu.add(R.id.group1, Menu.NONE, 1, "Runtime item "+ item);
+            for (String item : items) {
+                menu.add(R.id.group1, Menu.NONE, 1, item);
             }
         }
     }
