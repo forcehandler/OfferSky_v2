@@ -1,7 +1,9 @@
 package com.example.abhiraj.offersky.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
@@ -9,11 +11,11 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.design.widget.TabLayout;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.MenuItemCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SearchView;
@@ -22,13 +24,17 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Toast;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigationItem;
+import com.example.abhiraj.offersky.BaseActivity;
+import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.ShopAdapter;
 import com.example.abhiraj.offersky.drawable.BadgeDrawable;
 import com.example.abhiraj.offersky.model.Shop;
+import com.example.abhiraj.offersky.utils.FirebaseUtils;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -37,7 +43,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends AppCompatActivity
+public class MainActivity extends BaseActivity
         implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener, SearchView.OnQueryTextListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
@@ -66,6 +72,9 @@ public class MainActivity extends AppCompatActivity
 
         ButterKnife.bind(this);
 
+        LocalBroadcastManager.getInstance(this).registerReceiver(mallDataReadyReceiver,
+                new IntentFilter(Constants.Broadcast.MALL_DATA_READY));
+
         if(savedInstanceState != null){
             tabState = (TabState) savedInstanceState.getSerializable(TABSTATE_KEY);
         }
@@ -88,14 +97,16 @@ public class MainActivity extends AppCompatActivity
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
 
-        // Setup test RecyclerView
-        setupTestRecyclerView();
+        // Get malls
+        FirebaseUtils.getMall(this, "GA_0832_MDG");
+        // Show loading dialog
+        showProgressDialog();
 
         // UI functions
         createTabLayout();
         setupBottomNavigation();
 
-
+        navigationTest("test");
     }
 
 
@@ -166,6 +177,11 @@ public class MainActivity extends AppCompatActivity
         } else if (id == R.id.nav_send) {
 
         }
+
+        else if(item.getTitle().equals("Runtime item 1")){
+            Toast.makeText(this, "item 1" , Toast.LENGTH_SHORT).show();
+        }
+
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         drawer.closeDrawer(GravityCompat.START);
@@ -238,15 +254,16 @@ public class MainActivity extends AppCompatActivity
 
         Log.d(TAG, "btab " + position + " selected" + " and wasSelected = " + wasSelected+"");
 
+
         switch (position){
 
             case 0:
                 switch (tabState){
                     case Shopping:
-
+                            navigationTest("s_t0");
                         break;
                     case Food:
-
+                        navigationTest("f_t0");
                         break;
 
                 }
@@ -255,7 +272,7 @@ public class MainActivity extends AppCompatActivity
             case 1:
                 switch (tabState){
                     case Shopping:
-
+                        navigationTest("s_t1");
                         break;
                     case Food:
 
@@ -269,7 +286,7 @@ public class MainActivity extends AppCompatActivity
 
                         break;
                     case Food:
-
+                        navigationTest("f_t2");
                         break;
 
                 }
@@ -352,8 +369,8 @@ public class MainActivity extends AppCompatActivity
         recyclerView.setAdapter(shopAdapter);
 
         mModels = new ArrayList<>();
-        Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
-        mModels.add(s1);
+        //Shop s1 = new Shop("1", "gomtinagar", "city mall", "https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcTpve85Kj1sAQnBQy0h2a1IRAHkbffauY0iNvjCdpjed4HE7WI3");
+        mModels.addAll(FirebaseUtils.sMall.getShops().values());
         shopAdapter.edit().replaceAll(mModels)
                 .commit();
 
@@ -415,5 +432,26 @@ public class MainActivity extends AppCompatActivity
         icon.mutate();
         icon.setDrawableByLayerId(R.id.ic_badge, badge);
 
+    }
+
+    private BroadcastReceiver mallDataReadyReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            hideProgressDialog();
+            setupTestRecyclerView();
+        }
+    };
+
+    private void navigationTest(String item) {
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        if(navigationView != null){
+            final Menu menu = navigationView.getMenu();
+            menu.clear();
+            navigationView.inflateMenu(R.menu.base);
+            for (int i = 1; i <= 3; i++) {
+                menu.add(R.id.group1, Menu.NONE, 1, "Runtime item "+ item);
+            }
+        }
     }
 }

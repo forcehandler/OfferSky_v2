@@ -38,4 +38,6 @@ public class ChipAdapter extends RecyclerView.Adapter<ChipViewHolder>{
     public int getItemCount() {
         return categories.size();
     }
+
+
 }

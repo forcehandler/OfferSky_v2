@@ -12,7 +12,7 @@ public class FilterActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_filter);
 
-        // Ensure that the theme for the activity provides action bar
+        // Ensure that the theme for the activity
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             String title = getIntent().getStringExtra("Title");

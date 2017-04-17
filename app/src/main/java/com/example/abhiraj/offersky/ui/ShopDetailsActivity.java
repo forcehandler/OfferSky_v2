@@ -51,11 +51,13 @@ public class ShopDetailsActivity extends AppCompatActivity {
         setupTestChipRv();
     }
 
+    // TODO: Write proper implementation for chips
     private void setupTestChipRv() {
 
-        String[] categoriesarr = {"Formals", "Ethnic", "Jeans", "Trousers"};
+        String[] categoriesarr = {"Formals", "Ethnic", "Jeans", "Trousers",
+        "Fashion", "Footwear", "Handbags"};
         ArrayList<String> categories= new ArrayList<>(Arrays.asList(categoriesarr));
-        chip_rv.setLayoutManager(new LinearLayoutManager(this,LinearLayoutManager.HORIZONTAL, false));
+        chip_rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         ChipAdapter adapter = new ChipAdapter(categories);
         chip_rv.setAdapter(adapter);
     }
