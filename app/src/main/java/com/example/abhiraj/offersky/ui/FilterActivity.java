@@ -1,6 +1,5 @@
 package com.example.abhiraj.offersky.ui;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -11,6 +10,7 @@ import android.widget.TextView;
 
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.ShopAdapter;
+import com.example.abhiraj.offersky.clickListener.ShopItemClickListenerImplementation;
 import com.example.abhiraj.offersky.model.Shop;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
 
@@ -21,7 +21,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class FilterActivity extends AppCompatActivity implements ShopAdapter.ShopClickListener {
+public class FilterActivity extends AppCompatActivity {
 
     private static final String TAG = FilterActivity.class.getSimpleName();
 
@@ -60,7 +60,7 @@ public class FilterActivity extends AppCompatActivity implements ShopAdapter.Sho
                     return a.getName().compareTo(b.getName());
                 }
             };
-            shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
+            shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, new ShopItemClickListenerImplementation(this));
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerView.setAdapter(shopAdapter);
 
@@ -86,13 +86,5 @@ public class FilterActivity extends AppCompatActivity implements ShopAdapter.Sho
         }
     }
 
-    // Duplicate code for click listener and recycler view initialization
-    // TODO: refactor the code to reduce duplicate code
-    @Override
-    public void onShopClick(int position) {
-        Log.d(TAG, "shop at " + position + " clicked");
-        Intent intent = new Intent(FilterActivity.this, ShopDetailsActivity.class);
-        intent.putExtra("ShopId", mModels.get(position).getShopId());
-        startActivity(intent);
-    }
+
 }

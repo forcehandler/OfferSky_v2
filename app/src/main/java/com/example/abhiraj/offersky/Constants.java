@@ -7,6 +7,10 @@ package com.example.abhiraj.offersky;
 public class Constants {
 
     public interface Broadcast {
-        static String MALL_DATA_READY = "dataReadybroadcast";
+        String MALL_DATA_READY = "dataReadybroadcast";
+    }
+
+    public interface IntentKeys{
+        String SHOP_ID = "shopID";
     }
 }

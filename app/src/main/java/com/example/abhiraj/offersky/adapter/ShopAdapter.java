@@ -43,6 +43,6 @@ public class ShopAdapter extends SortedListAdapter<Shop>{
 
     public interface ShopClickListener{
 
-        void onShopClick(int position);
+        void onShopClick(String shopId);
     }
 }

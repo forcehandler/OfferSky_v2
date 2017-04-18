@@ -49,9 +49,9 @@ public class FirebaseUtils {
                 catch (Exception e){
                     Log.e(TAG, e.toString());
                 }
-
-                Log.d(TAG, sMall.getName());
-                sendDataReadyBroadcast(context);
+                if(sMall != null) {
+                    sendDataReadyBroadcast(context);
+                }
             }
 
             @Override

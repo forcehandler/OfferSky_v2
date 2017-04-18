@@ -5,24 +5,45 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.View;
+import android.widget.ImageView;
+import android.widget.TextView;
 
+import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.ChipAdapter;
+import com.example.abhiraj.offersky.adapter.OfferAdapter;
+import com.example.abhiraj.offersky.model.Offer;
+import com.example.abhiraj.offersky.model.Shop;
+import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class ShopDetailsActivity extends AppCompatActivity {
 
+    private static final String TAG = ShopDetailsActivity.class.getSimpleName();
+
+    private Shop shop;
+
     @BindView(R.id.rv_chip)
     RecyclerView chip_rv;
-
+    @BindView(R.id.rv_offer_image1)
+    RecyclerView offer_image_rv;
+    @BindView(R.id.iv_backdrop)ImageView backdrop_iv;
+    @BindView(R.id.tv_offer_description)
+    TextView offer_description_tv;
+    
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -48,7 +69,74 @@ public class ShopDetailsActivity extends AppCompatActivity {
             setTitle("Adidas");
         }
 
+        prepareUI();
         setupTestChipRv();
+    }
+
+    private void prepareUI(){
+        String shopId = getIntent().getStringExtra(Constants.IntentKeys.SHOP_ID);
+        try {
+           shop = FirebaseUtils.sMall.getShops().get(shopId);
+            Log.d(TAG, "shopId = " + shopId);
+
+            if(getSupportActionBar() != null) {
+                getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+                setTitle(shop.getName());
+            }
+
+            String brandImageURL = shop.getBrandImageURL();
+            Picasso.with(this)
+                    .load(brandImageURL)
+                    .into(backdrop_iv);
+        }
+        catch (Exception e){
+            Log.e(TAG, e.toString());
+        }
+
+        setupOfferRecyclerUI();
+    }
+
+    private void setupOfferRecyclerUI() {
+
+        final LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false);
+        offer_image_rv.setLayoutManager(linearLayoutManager);
+
+        List<String> offer_image_urls = new ArrayList<>();
+        final List<Offer> offers = new ArrayList<>();
+        offers.addAll(shop.getOffers().values());
+
+        for(Offer offer : offers){
+            offer_image_urls.add(offer.getOfferImageURL());
+            Log.d(TAG, "offer image urls = " + offer.getOfferImageURL());
+        }
+
+        OfferAdapter adapter = new OfferAdapter(offer_image_urls);
+        offer_image_rv.setAdapter(adapter);
+
+        SnapHelper helper = new LinearSnapHelper();
+        helper.attachToRecyclerView(offer_image_rv);
+
+        // set text for the first offer since the text changes only on scroll
+        offer_description_tv.setText(offers.get(0).getDescription());
+        offer_image_rv.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                Log.d(TAG, " onScroll state changes new state = " + newState);
+                if(newState == 0) {
+                    int position = linearLayoutManager.findFirstCompletelyVisibleItemPosition();
+                    Log.d(TAG, "first Completely Visible Position = " + position);
+
+                    // Set the offer text
+                    // sometimes during transition position returned is -1
+                    // so test for position
+                    if(position >= 0) {
+                        offer_description_tv.setText(offers.get(position).getDescription());
+                    }
+
+                }
+                super.onScrollStateChanged(recyclerView, newState);
+            }
+        });
     }
 
     // TODO: Write proper implementation for chips

@@ -31,6 +31,7 @@ import com.example.abhiraj.offersky.BaseActivity;
 import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.ShopAdapter;
+import com.example.abhiraj.offersky.clickListener.ShopItemClickListenerImplementation;
 import com.example.abhiraj.offersky.drawable.BadgeDrawable;
 import com.example.abhiraj.offersky.model.Shop;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
@@ -44,7 +45,7 @@ import butterknife.ButterKnife;
 
 
 public class MainActivity extends BaseActivity
-        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, ShopAdapter.ShopClickListener, SearchView.OnQueryTextListener {
+        implements NavigationView.OnNavigationItemSelectedListener, TabLayout.OnTabSelectedListener, AHBottomNavigation.OnTabSelectedListener, SearchView.OnQueryTextListener {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final String TABSTATE_KEY = "tabstate";
@@ -375,7 +376,7 @@ public class MainActivity extends BaseActivity
                 return a.getName().compareTo(b.getName());
             }
         };
-        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, this);
+        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, new ShopItemClickListenerImplementation(this));
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
         recyclerView.setAdapter(shopAdapter);
 
@@ -387,14 +388,6 @@ public class MainActivity extends BaseActivity
 
     }
 
-    // TODO: Improve the code by moving keys to constants class
-    @Override
-    public void onShopClick(int position) {
-        Log.d(TAG, "shop at " + position + " clicked");
-        Intent intent = new Intent(MainActivity.this, ShopDetailsActivity.class);
-        intent.putExtra("ShopId", mModels.get(position).getShopId());
-        startActivity(intent);
-    }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
