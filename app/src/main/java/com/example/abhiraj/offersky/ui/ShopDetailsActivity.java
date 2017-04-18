@@ -24,7 +24,6 @@ import com.example.abhiraj.offersky.utils.FirebaseUtils;
 import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import butterknife.BindView;
@@ -43,7 +42,8 @@ public class ShopDetailsActivity extends AppCompatActivity {
     @BindView(R.id.iv_backdrop)ImageView backdrop_iv;
     @BindView(R.id.tv_offer_description)
     TextView offer_description_tv;
-    
+    @BindView(R.id.tv_location) TextView location_tv;
+    @BindView(R.id.tv_shop_description) TextView shop_description_tv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -70,30 +70,46 @@ public class ShopDetailsActivity extends AppCompatActivity {
         }
 
         prepareUI();
-        setupTestChipRv();
+
     }
 
     private void prepareUI(){
         String shopId = getIntent().getStringExtra(Constants.IntentKeys.SHOP_ID);
+
+        // Get the clicked shop from the shop id and set the title, backdrop image
+        // category chips and the offers.
         try {
            shop = FirebaseUtils.sMall.getShops().get(shopId);
             Log.d(TAG, "shopId = " + shopId);
 
+            // Set title
             if(getSupportActionBar() != null) {
                 getSupportActionBar().setDisplayHomeAsUpEnabled(true);
                 setTitle(shop.getName());
             }
 
+            // Set backdrop
             String brandImageURL = shop.getBrandImageURL();
             Picasso.with(this)
                     .load(brandImageURL)
                     .into(backdrop_iv);
+
+            // Set offers
+            setupOfferRecyclerUI();
+
+            // Set category chips
+            setupTestChipRv();
+
+            // Set location, phone and email
+            location_tv.setText(shop.getLocation());
+
+            // Set description
+            shop_description_tv.setText(shop.getGender());
         }
         catch (Exception e){
             Log.e(TAG, e.toString());
         }
 
-        setupOfferRecyclerUI();
     }
 
     private void setupOfferRecyclerUI() {
@@ -142,9 +158,8 @@ public class ShopDetailsActivity extends AppCompatActivity {
     // TODO: Write proper implementation for chips
     private void setupTestChipRv() {
 
-        String[] categoriesarr = {"Formals", "Ethnic", "Jeans", "Trousers",
-        "Fashion", "Footwear", "Handbags"};
-        ArrayList<String> categories= new ArrayList<>(Arrays.asList(categoriesarr));
+        ArrayList<String> categories= new ArrayList<>();
+        categories.addAll(shop.getCategories().values());
         chip_rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         ChipAdapter adapter = new ChipAdapter(categories);
         chip_rv.setAdapter(adapter);
