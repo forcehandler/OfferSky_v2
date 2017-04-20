@@ -13,4 +13,9 @@ public class Constants {
     public interface IntentKeys{
         String SHOP_ID = "shopID";
     }
+
+    public interface Signup{
+        String USER_DEFAULT_EMAIL_DOMAIN = "@offersky.com";
+        String USER_DEFAULT_PASSWORD = "ds123456789";
+    }
 }
