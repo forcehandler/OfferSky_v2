@@ -1,10 +1,12 @@
 package com.example.abhiraj.offersky.model;
 
+import java.io.Serializable;
+
 /**
  * Created by Abhiraj on 24-04-2017.
  */
 
-public class Coupon {
+public class Coupon implements Serializable{
 
     private String couponId;
     private String brand;

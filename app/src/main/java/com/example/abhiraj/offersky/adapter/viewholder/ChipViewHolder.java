@@ -23,7 +23,6 @@ public class ChipViewHolder extends RecyclerView.ViewHolder {
         ButterKnife.bind(this, itemView);
     }
 
-    // TODO: Replace this String with category model
     public void bindChip(String category){
         chip_name_tv.setText(category);
     }

@@ -1,7 +1,9 @@
 package com.example.abhiraj.offersky;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AlertDialog;
@@ -58,6 +60,11 @@ public abstract class BaseActivity extends AppCompatActivity{
                         dialogInterface.dismiss();
                     }
                 }).create().show();
+    }
+
+    // Check network connectivity
+    public boolean isNetworkAvailable(final Context context) {
+        return ((ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE)).getActiveNetworkInfo() != null;
     }
 
 }

@@ -60,6 +60,8 @@ public class FilterActivity extends AppCompatActivity {
                     return a.getName().compareTo(b.getName());
                 }
             };
+
+            // click listener is implemented in another class.
             shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, new ShopItemClickListenerImplementation(this));
             recyclerView.setLayoutManager(new LinearLayoutManager(this));
             recyclerView.setAdapter(shopAdapter);

@@ -62,7 +62,6 @@ public class ShopDetailsActivity extends AppCompatActivity {
             }
         });
 
-        // TODO: Properly Implement setting Display Title and add ImageView of the Shop/Brand
         // for the collapsible toolbar
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -155,7 +154,6 @@ public class ShopDetailsActivity extends AppCompatActivity {
         });
     }
 
-    // TODO: Write proper implementation for chips
     private void setupTestChipRv() {
 
         ArrayList<String> categories= new ArrayList<>();
