@@ -99,9 +99,11 @@ public class FirebaseUtils {
                     Log.d(TAG, e.toString());
                 }
                 // TODO: Seems like a redundant check, test it and remove if unnecessary
+
                 if(visitor_number != -2){
                     sendDataReadyBroadcast(context, 1);             // 1 for visitor number ready
                 }
+
             }
 
             @Override
@@ -125,9 +127,11 @@ public class FirebaseUtils {
         Intent intent = new Intent();
         switch (type){
             case 0:
+                Log.d(TAG, "sending mall data ready broadcast");
                 intent.setAction(Constants.Broadcast.MALL_DATA_READY);
                 break;
             case 1:
+                Log.d(TAG, "sending visitor data ready broadcast");
                 intent.setAction(Constants.Broadcast.VISITOR_DATA_READY);
                 break;
         }

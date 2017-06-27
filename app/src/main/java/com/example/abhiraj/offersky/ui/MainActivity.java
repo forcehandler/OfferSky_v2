@@ -701,7 +701,7 @@ public class MainActivity extends BaseActivity
                     if (!checkPermission()) {
                         askPermission();
                     } else {
-                        startEarningSequence();
+                        startEarningSequence(); 
 
                     }
 

@@ -26,8 +26,10 @@ import android.support.compat.BuildConfig;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.example.abhiraj.offersky.Constants;
+import com.example.abhiraj.offersky.DbHandler.CouponDbHandler;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.model.Coupon;
 import com.example.abhiraj.offersky.model.Mall;
@@ -56,6 +58,8 @@ public class StepListener extends Service implements SensorEventListener{
     private static int no_of_coupons_to_give = 5;
     private static int M1 = 0, M2 = 0, M3 = 0, M4 = 0, M5 = 0;
     private static boolean couponIssueStatus[] = new boolean[5];
+
+    private CouponDbHandler dbHandler = new CouponDbHandler(this);
 
 
     private final IBinder mBinder = new StepBinder();
@@ -89,6 +93,7 @@ public class StepListener extends Service implements SensorEventListener{
                 Log.d(TAG, "no of steps received " + steps);
 
             steps++;
+            Toast.makeText(this,"steps = " + steps, Toast.LENGTH_SHORT).show();
             //publishSteps();
             //updateSteps(steps);
             sendCouponsAccordingToMilestones(steps);
@@ -96,9 +101,18 @@ public class StepListener extends Service implements SensorEventListener{
         }
     }
 
+    private String getMallId(){
+        // get the mall object
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                Context.MODE_PRIVATE);
+        String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
+        return mallId;
+    }
+
     private void sendCouponsAccordingToMilestones(int steps) {
         Log.d(TAG, "sendCouponsAccordingToMilestones");
         Log.d(TAG, "steps = " + steps);
+        Coupon coupon = null;
         if(M1 == 0 && M2 == 0){
             Log.d(TAG, "m1 and m2 are 0");
             return;
@@ -108,11 +122,63 @@ public class StepListener extends Service implements SensorEventListener{
 
             if(couponsToOffer.size() >= 1) {
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
-                Coupon coupon1 = couponsToOffer.get(0);
+                coupon = couponsToOffer.get(0);
                 Log.d(TAG, "sending first coupon to user and first milestone achieved");
-                 sendCouponNotification(coupon1.getBrand(), coupon1.getDescription());
+                 sendCouponNotification(coupon.getBrand(), coupon.getDescription());
                 couponIssueStatus[0] = true;
+
             }
+        }
+        else if(steps >= M2 && couponIssueStatus[1] == false){
+            // send out first coupon as notification
+
+            if(couponsToOffer.size() >= 2) {
+                Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
+                coupon = couponsToOffer.get(1);
+                Log.d(TAG, "sending second coupon to user and first milestone achieved");
+                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                couponIssueStatus[1] = true;
+            }
+        }
+
+        else if(steps >= M3 && couponIssueStatus[2] == false){
+            // send out first coupon as notification
+
+            if(couponsToOffer.size() >= 3) {
+                Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
+                coupon = couponsToOffer.get(2);
+                Log.d(TAG, "sending third coupon to user and third milestone achieved");
+                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                couponIssueStatus[2] = true;
+            }
+        }
+        else if(steps >= M4 && couponIssueStatus[3] == false){
+            // send out first coupon as notification
+
+            if(couponsToOffer.size() >= 4) {
+                Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
+                coupon = couponsToOffer.get(3);
+                Log.d(TAG, "sending fourth coupon to user and first milestone achieved");
+                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                couponIssueStatus[3] = true;
+            }
+        }
+        else if(steps >= M5 && couponIssueStatus[4] == false){
+            // send out first coupon as notification
+
+            if(couponsToOffer.size() >= 5) {
+                Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
+                coupon = couponsToOffer.get(4);
+                Log.d(TAG, "sending fifth coupon to user and first milestone achieved");
+                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                couponIssueStatus[4] = true;
+            }
+        }
+
+
+        if(coupon != null){
+            Log.d(TAG, "adding coupon id = " + coupon.getCouponId() + " to the allottedCouponDb");
+            dbHandler.addCouponToAllottedList(coupon, getMallId());
         }
     }
 
@@ -133,7 +199,6 @@ public class StepListener extends Service implements SensorEventListener{
     public void onCreate()
     {
         Log.d(TAG, "onCreate of StepListener");
-        Log.d(TAG, "onCreate");
         super.onCreate();
         if(BuildConfig.DEBUG)
             Log.d(TAG, "StepListener Oncreate");
@@ -159,11 +224,6 @@ public class StepListener extends Service implements SensorEventListener{
 
         notificationBuilder = new NotificationCompat.Builder(this);
 
-        // Register broadcast receiver for gps state change.
-        /*gpsCheckReceiver = new GpsCheckReceiver();
-        Log.d(TAG, "registering gps check broadcast receiver");
-        registerReceiver(gpsCheckReceiver, new IntentFilter(LocationManager.PROVIDERS_CHANGED_ACTION));*/
-
         LocalBroadcastManager.getInstance(this).registerReceiver(dataReadyReceiver,
                 new IntentFilter(Constants.Broadcast.MALL_DATA_READY));
         LocalBroadcastManager.getInstance(this).registerReceiver(dataReadyReceiver,
@@ -181,10 +241,7 @@ public class StepListener extends Service implements SensorEventListener{
             Log.d(TAG, "StepListener onDestroy");
         unRegisterSensor();
         releaseWakeLock();
-        /*if(gpsCheckReceiver != null){
-            Log.d(TAG, "unregistering gps check broadcast receiver");
-            unregisterReceiver(gpsCheckReceiver);
-        }*/
+
         super.onDestroy();
 
     }
@@ -192,7 +249,12 @@ public class StepListener extends Service implements SensorEventListener{
     private BroadcastReceiver dataReadyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+
+            //TODO: Add a tag to the mall ready broadcasts so that it does not refreshes when not
+            // intended to
+
             Log.d(TAG, "received DATA READY broadcast");
+            Log.d(TAG, "received the intent action = " +  intent.getAction());
             if(intent.getAction().equals(Constants.Broadcast.MALL_DATA_READY))
             {
                 Log.d(TAG, "received the mall data");
@@ -201,9 +263,9 @@ public class StepListener extends Service implements SensorEventListener{
                 Log.d(TAG, "mall name received = " + mall.getName());
                 int no_of_coupons_available = mall.getCoupons().size();
                 int starting_index = 0;
-                /*if(visitor_no != 0){
-                    starting_index = (visitor_no*no_of_coupons_to_give)% no_of_coupons_available;
-                }*/
+                if(visitor_no != 0){
+                    starting_index = (int)(visitor_no*no_of_coupons_to_give)% no_of_coupons_available;
+                }
 
                 ArrayList<Coupon> allCouponsFromMallList = new ArrayList<>();
                 for(Map.Entry<String, Coupon> entry: mall.getCoupons().entrySet()) {

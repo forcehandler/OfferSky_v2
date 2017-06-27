@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "293588745295",
+    "firebase_url": "https://offersky-a13bb.firebaseio.com",
+    "project_id": "offersky-a13bb",
+    "storage_bucket": "offersky-a13bb.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:293588745295:android:15ede7d29e0fb8d8",
+        "android_client_info": {
+          "package_name": "com.example.abhiraj.offersky"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "293588745295-kkrbok9lsqi1i88rdqlbq3e83843e0r4.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.abhiraj.offersky",
+            "certificate_hash": "20d4b847041803a732d8883dd92e96c5fd1e5fbb"
+          }
+        },
+        {
+          "client_id": "293588745295-skumc2ou0ubpu0rk5i891mkt5p9tatjn.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCa1EXWY38NPWuRBWYYpIBx1eiV51-pWB0"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "293588745295-skumc2ou0ubpu0rk5i891mkt5p9tatjn.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
