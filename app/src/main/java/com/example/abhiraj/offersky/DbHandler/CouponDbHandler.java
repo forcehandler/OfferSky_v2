@@ -21,6 +21,7 @@ import java.util.List;
 public class CouponDbHandler extends SQLiteOpenHelper {
 
 
+    private static final String TAG = CouponDbHandler.class.getSimpleName();
     // All Static variables
     // Database Version
     private static final int DATABASE_VERSION = 1;
@@ -36,6 +37,7 @@ public class CouponDbHandler extends SQLiteOpenHelper {
     private static final String KEY_MALL_ID = "mallId";
     private static final String KEY_ALLOTMENT_DATE = "allotmentDate";
     private static final String KEY_ALLOTMENT_TIME = "allotmentTime";
+    private static final String KEY_ALLOTMENT_EPOCH_TIME = "allotment_epoch_time";
 
     public CouponDbHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
@@ -45,7 +47,8 @@ public class CouponDbHandler extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         String CREATE_COUPONS_TABLE = "CREATE TABLE " + TABLE_COUPONS + "("
                 + KEY_ID + " VARCHAR(50) PRIMARY KEY," + KEY_MALL_ID + " VARCHAR(100),"
-                + KEY_ALLOTMENT_DATE + " VARCHAR(20)," + KEY_ALLOTMENT_TIME + " VARCHAR(20)" + ")";
+                + KEY_ALLOTMENT_DATE + " VARCHAR(20)," + KEY_ALLOTMENT_TIME + " VARCHAR(20), " +
+                KEY_ALLOTMENT_EPOCH_TIME + " VARCHAR(20) "+ ")";
         db.execSQL(CREATE_COUPONS_TABLE);
     }
 
@@ -60,6 +63,8 @@ public class CouponDbHandler extends SQLiteOpenHelper {
 
     // Adding new coupon entry to allotted coupons
     public void addCouponToAllottedList(Coupon coupon, String mallId) {
+
+        Log.d(TAG, "addCouponToAllottedList() " + coupon.getCouponId() + " to mall = " + mallId);
         SQLiteDatabase db = this.getWritableDatabase();
 
         ContentValues values = new ContentValues();
@@ -72,6 +77,10 @@ public class CouponDbHandler extends SQLiteOpenHelper {
         String time = new SimpleDateFormat("HH:mm:ss").format(Calendar.getInstance().getTime());
         values.put(KEY_ALLOTMENT_TIME, time);
 
+        String epoch_time = Calendar.getInstance().getTimeInMillis() + "";
+        values.put(KEY_ALLOTMENT_EPOCH_TIME, epoch_time);
+
+        Log.d(TAG, "epoch time is = " + epoch_time);
         Log.d("TIME", time + " is the time obtained");
         Log.d("DATE", date + " is the date obtained");
 
@@ -80,9 +89,20 @@ public class CouponDbHandler extends SQLiteOpenHelper {
         db.close(); // Closing database connection
     }
 
+    // Delete coupons from allotted list
+    public void deleteCouponFromAllottedList(Coupon coupon, String mallId){
+
+        Log.d(TAG, "deleteCouponFromAllottedList()"  + coupon.getCouponId());
+        SQLiteDatabase db = this.getWritableDatabase();
+
+        String query = "DELETE FROM " + TABLE_COUPONS + "WHERE " + KEY_ID + " = " + coupon.getCouponId();
+        db.rawQuery(query, null);
+        db.close();
+    }
+
     // Get all Coupons allotted to the user from a mall
     public List<String> getAllAllottedCouponIds(String mallId){
-
+        Log.d(TAG, "getAllAllottedCouponIds() from " + mallId);
         SQLiteDatabase db = this.getReadableDatabase();
 
         Cursor cursor = db.query(TABLE_COUPONS, new String[] { KEY_ID}, KEY_MALL_ID + "=?",
@@ -99,7 +119,69 @@ public class CouponDbHandler extends SQLiteOpenHelper {
 
             }while(cursor.moveToNext());
         }
+        cursor.close();
+        db.close();
         return allottedCouponIds;
+    }
+
+    public String getCouponAllotmentEpochTime(Coupon coupon){
+        Log.d(TAG, "getCouponAllotmentDate() " + coupon.getCouponId());
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TABLE_COUPONS + " WHERE " +
+                KEY_ID + " = '" + coupon.getCouponId()+ "'";
+
+        Cursor cursor = db.rawQuery(query, null);
+
+        String allottmentDate = null;
+        if(cursor != null){
+            cursor.moveToFirst();
+            allottmentDate = cursor.getString(cursor.getColumnIndex(KEY_ALLOTMENT_EPOCH_TIME));
+
+        }
+        cursor.close();
+        db.close();
+        return allottmentDate;
+    }
+
+    public String getCouponAllottmentDate(Coupon coupon){
+        Log.d(TAG, "getCouponAllottmentDate() " + coupon.getCouponId());
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT " + KEY_ALLOTMENT_DATE + " FROM " + TABLE_COUPONS + " WHERE " +
+                KEY_ID + " = " + coupon.getCouponId();
+
+        Cursor cursor = db.rawQuery(query, null);
+
+        String allottmentDate = null;
+        if(cursor != null){
+            cursor.moveToFirst();
+            allottmentDate = cursor.getString(cursor.getColumnIndex(KEY_ALLOTMENT_DATE));
+
+        }
+        cursor.close();
+        db.close();
+        return allottmentDate;
+    }
+
+    public String getCouponAllottmentTime(Coupon coupon){
+        Log.d(TAG, "getCouponAllottmentTime() " + coupon.getCouponId());
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TABLE_COUPONS + " WHERE " +
+                KEY_ID + " = " + coupon.getCouponId();
+
+        Cursor cursor = db.rawQuery(query, null);
+
+        String allottmentTime = null;
+        if(cursor != null){
+            cursor.moveToFirst();
+            allottmentTime = cursor.getString(cursor.getColumnIndex(KEY_ALLOTMENT_DATE));
+
+        }
+        cursor.close();
+        db.close();
+        return allottmentTime;
     }
 
     // Getting coupons Count
@@ -111,6 +193,8 @@ public class CouponDbHandler extends SQLiteOpenHelper {
 
         Log.d("getCouponsCount()", cursor.getCount() + " ");
         // return count
+        cursor.close();
+        db.close();
         return cursor.getCount();
     }
 }

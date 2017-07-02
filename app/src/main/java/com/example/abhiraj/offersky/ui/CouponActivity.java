@@ -8,13 +8,18 @@ import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.abhiraj.offersky.DbHandler.CouponDbHandler;
 import com.example.abhiraj.offersky.R;
-import com.example.abhiraj.offersky.adapter.EventAdapter;
-import com.example.abhiraj.offersky.model.Event;
+import com.example.abhiraj.offersky.adapter.CouponAdapter;
+import com.example.abhiraj.offersky.model.Coupon;
+import com.example.abhiraj.offersky.model.Mall;
+import com.example.abhiraj.offersky.utils.CouponUtils;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -23,8 +28,10 @@ public class CouponActivity extends AppCompatActivity {
 
     private static final String TAG = CouponActivity.class.getSimpleName();
 
-    private EventAdapter mCouponAdapter;
-    private List<Event> mModels;
+    private CouponAdapter mCouponAdapter;
+    private List<Coupon> mModels;
+    private List<String> allottedCouponIds;
+    private CouponDbHandler db;
 
     @BindView(R.id.rv_coupon)RecyclerView coupon_rv;
     @BindView(R.id.empty_view)TextView empty_msg_tv;
@@ -37,7 +44,7 @@ public class CouponActivity extends AppCompatActivity {
         if(getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             setTitle("Coupons");
-
+            db = new CouponDbHandler(this);
             setupRecyclerView();
         }
     }
@@ -47,29 +54,49 @@ public class CouponActivity extends AppCompatActivity {
         Log.d(TAG, "insetupRecyclerView()");
         if(coupon_rv != null){
             Log.d(TAG, "setupRecyclerView()");
-
             mModels = new ArrayList<>();
 
-            try {
-                mModels.addAll(FirebaseUtils.sMall.getEvents().values());
-                Log.d(TAG, "mall id when fetching events = " + FirebaseUtils.sMall.getMallId());
-            }catch (Exception e){
-                Log.e(TAG, e.toString());
-            }
+            // get all the coupons from the local coupon database
+            String mallId = OfferSkyUtils.getCurrentMallId(this);
+            allottedCouponIds = db.getAllAllottedCouponIds(mallId);
 
-            if(mModels.size() == 0)
+            if(allottedCouponIds.size() == 0)
             {
+                Log.d(TAG, "No coupons have been allotted yet");
                 coupon_rv.setVisibility(View.GONE);
                 empty_msg_tv.setVisibility(View.VISIBLE);
             }
 
             else{
-                Log.d(TAG, "no of events = " + mModels.size());
-                mCouponAdapter = new EventAdapter(mModels);
+                // grab hold of the mall object and get all the coupons which have been allotted
+                // and store them in mModels
+                try{
+                    Mall mall = FirebaseUtils.sMall;
+                    Map<String, Coupon> couponMap = mall.getCoupons();
+                    for(String allottedCouponId : allottedCouponIds){
+                        Coupon coupon = couponMap.get(allottedCouponId);
+                        if(coupon != null){
+                            // check if the coupon is still valid
+                            if(CouponUtils.isCouponAllotable(this, coupon)){
+                                mModels.add(coupon);
+                            }
+                            else{
+                                db.deleteCouponFromAllottedList(coupon, mallId);
+                            }
+                        }
+                    }
+
+                } catch (Exception e){
+                    Log.e(TAG, e.toString());
+                    Log.e(TAG, "error in obtaining mall maybe?");
+                }
+                Log.d(TAG, "no of coupons = " + mModels.size());
+                mCouponAdapter = new CouponAdapter(mModels);
                 coupon_rv.setLayoutManager(new LinearLayoutManager(this));
                 coupon_rv.setAdapter(mCouponAdapter);
             }
 
         }
     }
+
 }

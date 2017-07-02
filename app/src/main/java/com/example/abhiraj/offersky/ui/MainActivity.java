@@ -206,6 +206,9 @@ public class MainActivity extends BaseActivity
             TabLayout.Tab tab = tabLayout.getTabAt(1);
             tab.select();
 
+        } else if(id == R.id.nav_coupons){
+            Intent intent =  new Intent(MainActivity.this, CouponActivity.class);
+            startActivity(intent);
         } else if (id == R.id.nav_events) {
             Intent intent = new Intent(MainActivity.this, EventActivity.class);
             startActivity(intent);

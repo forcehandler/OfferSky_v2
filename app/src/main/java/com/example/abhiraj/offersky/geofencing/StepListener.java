@@ -102,7 +102,7 @@ public class StepListener extends Service implements SensorEventListener{
     }
 
     private String getMallId(){
-        // get the mall object
+
         SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
                 Context.MODE_PRIVATE);
         String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
