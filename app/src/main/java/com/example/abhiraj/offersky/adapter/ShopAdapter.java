@@ -25,8 +25,9 @@ public class ShopAdapter extends SortedListAdapter<Shop>{
         mShopClickListener = shopClickListener;
     }
 
+
     @Override
-    protected ViewHolder<? extends Shop> onCreateViewHolder(LayoutInflater inflater, ViewGroup parent, int i) {
+    protected ViewHolder<? extends Shop> onCreateViewHolder(LayoutInflater inflater, ViewGroup parent, int viewType) {
         final View view =inflater.inflate(R.layout.shop_card, parent, false);
         return new ShopViewHolder(view, mShopClickListener);
     }

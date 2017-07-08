@@ -1,12 +1,14 @@
 package com.example.abhiraj.offersky.model;
 
+import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter;
+
 import java.io.Serializable;
 
 /**
  * Created by Abhiraj on 24-04-2017.
  */
 
-public class Coupon implements Serializable{
+public class Coupon implements Serializable, SortedListAdapter.ViewModel{
 
     private String couponId;
     private String brand;

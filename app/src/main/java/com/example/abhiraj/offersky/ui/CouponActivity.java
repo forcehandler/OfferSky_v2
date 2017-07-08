@@ -1,6 +1,8 @@
 package com.example.abhiraj.offersky.ui;
 
+import android.content.DialogInterface;
 import android.os.Bundle;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -18,13 +20,14 @@ import com.example.abhiraj.offersky.utils.FirebaseUtils;
 import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CouponActivity extends AppCompatActivity {
+public class CouponActivity extends AppCompatActivity  implements  CouponAdapter.CouponCodeClickListener{
 
     private static final String TAG = CouponActivity.class.getSimpleName();
 
@@ -55,6 +58,15 @@ public class CouponActivity extends AppCompatActivity {
         if(coupon_rv != null){
             Log.d(TAG, "setupRecyclerView()");
             mModels = new ArrayList<>();
+
+            final Comparator<Coupon> COUPON_REDEEM_COMPARATOR = new Comparator<Coupon>() {
+                @Override
+                public int compare(Coupon a, Coupon b) {
+                    String a_redeem_time = db.getRedeemStatus(a);
+                    String b_redeem_time = db.getRedeemStatus(b);
+                    return a_redeem_time.compareTo(b_redeem_time)*(-1);
+                }
+            };
 
             // get all the coupons from the local coupon database
             String mallId = OfferSkyUtils.getCurrentMallId(this);
@@ -91,12 +103,34 @@ public class CouponActivity extends AppCompatActivity {
                     Log.e(TAG, "error in obtaining mall maybe?");
                 }
                 Log.d(TAG, "no of coupons = " + mModels.size());
-                mCouponAdapter = new CouponAdapter(mModels);
+                if(mModels.size() == 0){
+                    coupon_rv.setVisibility(View.GONE);
+                    empty_msg_tv.setVisibility(View.VISIBLE);
+                }
+                mCouponAdapter = new CouponAdapter(this, Coupon.class, COUPON_REDEEM_COMPARATOR, this);
                 coupon_rv.setLayoutManager(new LinearLayoutManager(this));
                 coupon_rv.setAdapter(mCouponAdapter);
+
+                mCouponAdapter.edit().replaceAll(mModels).commit();
             }
 
         }
     }
 
+    @Override
+    public void onCouponCodeClick(final Coupon coupon) {
+        Log.d(TAG, "Coupon clicked is = " + coupon.getBrand());
+        new AlertDialog.Builder(this)
+                .setTitle("Code")
+                .setMessage("The coupon code is " + coupon.getCode())
+                .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialogInterface, int i) {
+                        dialogInterface.dismiss();
+                        // Redeem the coupon
+                        CouponUtils.setCouponAsRedeemed(CouponActivity.this, coupon);
+                    }
+                }).show();
+
+    }
 }

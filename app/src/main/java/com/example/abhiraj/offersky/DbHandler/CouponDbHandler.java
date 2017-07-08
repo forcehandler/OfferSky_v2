@@ -38,7 +38,9 @@ public class CouponDbHandler extends SQLiteOpenHelper {
     private static final String KEY_ALLOTMENT_DATE = "allotmentDate";
     private static final String KEY_ALLOTMENT_TIME = "allotmentTime";
     private static final String KEY_ALLOTMENT_EPOCH_TIME = "allotment_epoch_time";
+    private static final String KEY_REDEEM_STATUS = "coupon_redeem_status";
 
+    private static final String NOT_REDEEM_VALUE = "0";
     public CouponDbHandler(Context context) {
         super(context, DATABASE_NAME, null, DATABASE_VERSION);
     }
@@ -48,7 +50,7 @@ public class CouponDbHandler extends SQLiteOpenHelper {
         String CREATE_COUPONS_TABLE = "CREATE TABLE " + TABLE_COUPONS + "("
                 + KEY_ID + " VARCHAR(50) PRIMARY KEY," + KEY_MALL_ID + " VARCHAR(100),"
                 + KEY_ALLOTMENT_DATE + " VARCHAR(20)," + KEY_ALLOTMENT_TIME + " VARCHAR(20), " +
-                KEY_ALLOTMENT_EPOCH_TIME + " VARCHAR(20) "+ ")";
+                KEY_ALLOTMENT_EPOCH_TIME + " VARCHAR(20), " + KEY_REDEEM_STATUS + " VARCHAR(20) "+ ")";
         db.execSQL(CREATE_COUPONS_TABLE);
     }
 
@@ -80,6 +82,8 @@ public class CouponDbHandler extends SQLiteOpenHelper {
         String epoch_time = Calendar.getInstance().getTimeInMillis() + "";
         values.put(KEY_ALLOTMENT_EPOCH_TIME, epoch_time);
 
+        values.put(KEY_REDEEM_STATUS, NOT_REDEEM_VALUE);
+
         Log.d(TAG, "epoch time is = " + epoch_time);
         Log.d("TIME", time + " is the time obtained");
         Log.d("DATE", date + " is the date obtained");
@@ -89,14 +93,57 @@ public class CouponDbHandler extends SQLiteOpenHelper {
         db.close(); // Closing database connection
     }
 
+
     // Delete coupons from allotted list
     public void deleteCouponFromAllottedList(Coupon coupon, String mallId){
 
         Log.d(TAG, "deleteCouponFromAllottedList()"  + coupon.getCouponId());
         SQLiteDatabase db = this.getWritableDatabase();
 
-        String query = "DELETE FROM " + TABLE_COUPONS + "WHERE " + KEY_ID + " = " + coupon.getCouponId();
-        db.rawQuery(query, null);
+        String query = "DELETE FROM " + TABLE_COUPONS + " WHERE " + KEY_ID + " = '" + coupon.getCouponId() + "'";
+        db.delete(TABLE_COUPONS, KEY_ID + "='" + coupon.getCouponId() + "'", null);
+        //db.rawQuery(query, null);
+        db.close();
+    }
+
+    public String getRedeemStatus(Coupon coupon){
+        // Returns 0 if the coupon has not been redeemed
+        // else returns the time in milliseconds since epoch when the coupon was redeemed
+        Log.d(TAG, "getRedeemStatus(" + coupon.getCouponId() + ")");
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        String query = "SELECT * FROM " + TABLE_COUPONS + " WHERE " + KEY_ID + " = '"  + coupon.getCouponId() + "'";
+        Cursor cursor = db.rawQuery(query, null);
+
+        String redeem_status = "0";
+
+        if(cursor != null){
+            cursor.moveToFirst();
+
+            redeem_status = cursor.getString(cursor.getColumnIndex(KEY_REDEEM_STATUS));
+        }
+        Log.d(TAG, "redeem status = " + redeem_status);
+        cursor.close();
+        db.close();
+        return redeem_status;
+    }
+
+    public void setRedeemStatus(Coupon coupon){
+        Log.d(TAG, "setRedeemStatus(" + coupon.getCouponId() + ")");
+
+        SQLiteDatabase db = this.getReadableDatabase();
+
+        ContentValues cv = new ContentValues();
+        String epoch_time = Calendar.getInstance().getTimeInMillis() + "";
+        cv.put(KEY_REDEEM_STATUS,epoch_time);   // time when the coupon was redeemed in millis
+
+        db.update(TABLE_COUPONS, cv, KEY_ID + "= '" + coupon.getCouponId() + "'", null);
+
+        /*String query = "UPDATE " + TABLE_COUPONS + " SET " + KEY_REDEEM_STATUS + " = " + REDEEM_VALUE
+                + " WHERE " + KEY_ID  + " = '" + coupon.getCouponId() + "'";
+        db.rawQuery(query, null);*/
+
         db.close();
     }
 
@@ -133,15 +180,15 @@ public class CouponDbHandler extends SQLiteOpenHelper {
 
         Cursor cursor = db.rawQuery(query, null);
 
-        String allottmentDate = null;
+        String allotmentDate = null;
         if(cursor != null){
             cursor.moveToFirst();
-            allottmentDate = cursor.getString(cursor.getColumnIndex(KEY_ALLOTMENT_EPOCH_TIME));
+            allotmentDate = cursor.getString(cursor.getColumnIndex(KEY_ALLOTMENT_EPOCH_TIME));
 
         }
         cursor.close();
         db.close();
-        return allottmentDate;
+        return allotmentDate;
     }
 
     public String getCouponAllottmentDate(Coupon coupon){

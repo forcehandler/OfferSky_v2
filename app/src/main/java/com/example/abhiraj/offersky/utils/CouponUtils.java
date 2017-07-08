@@ -27,18 +27,41 @@ public class CouponUtils {
         CouponDbHandler db = new CouponDbHandler(context);
 
         String allotment_time_str = db.getCouponAllotmentEpochTime(coupon);
-        Log.d(TAG, "allotment time of coupon is "  + allotment_time_str);
+        //Log.d(TAG, "allotment time of coupon is "  + allotment_time_str);
 
         String curr_time_str = Calendar.getInstance().getTimeInMillis() + "";
-        Log.d(TAG, "curr time in millis = " + curr_time_str);
+        //Log.d(TAG, "curr time in millis = " + curr_time_str);
 
         long allotment_time = Long.parseLong(allotment_time_str);
         long curr_time = Long.parseLong(curr_time_str);
         long diff = curr_time - allotment_time;
 
-        Log.d(TAG , "diff = " + diff);
+        long diff_hour = diff / (60 * 60 * 1000);
+        Log.d(TAG, "diffHour = " + diff_hour);
 
-        return true;
+        boolean isAllotable = false;
+        if(diff_hour < validity){
+            isAllotable = true;
+        }
+        return isAllotable;
+    }
+
+    public static int isCouponRedeemed(Context context, Coupon coupon){
+
+        Log.d(TAG, "isCouponRedeemed(" + coupon.getCouponId() + " )");
+
+        CouponDbHandler db = new CouponDbHandler(context);
+        String redeem_status = db.getRedeemStatus(coupon);
+        if(redeem_status.equals("0"))
+            return 0;
+        return 1;
+    }
+
+    public static void setCouponAsRedeemed(Context context, Coupon coupon){
+        Log.d(TAG, "setCouponAsRedeemed(" + coupon.getCouponId() + " )");
+
+        CouponDbHandler db = new CouponDbHandler(context);
+        db.setRedeemStatus(coupon);
     }
 
     // Function to add coupons given to the user to shared preferences along with the date and
