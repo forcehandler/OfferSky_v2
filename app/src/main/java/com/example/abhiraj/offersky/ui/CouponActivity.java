@@ -64,7 +64,7 @@ public class CouponActivity extends AppCompatActivity  implements  CouponAdapter
                 public int compare(Coupon a, Coupon b) {
                     String a_redeem_time = db.getRedeemStatus(a);
                     String b_redeem_time = db.getRedeemStatus(b);
-                    return a_redeem_time.compareTo(b_redeem_time)*(-1);
+                    return a_redeem_time.compareTo(b_redeem_time);
                 }
             };
 

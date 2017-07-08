@@ -43,7 +43,7 @@ import java.util.Map;
  * Created by Abhiraj on 22-04-2017.
  */
 
-public class StepListener extends Service implements SensorEventListener{
+public class StepListener extends Service implements SensorEventListener, AccelerometerStepListener{
 
     private static final String TAG = StepListener.class.getSimpleName();
     private static int steps;
@@ -58,7 +58,12 @@ public class StepListener extends Service implements SensorEventListener{
     private static int no_of_coupons_to_give = 5;
     private static int M1 = 0, M2 = 0, M3 = 0, M4 = 0, M5 = 0;
     private static boolean couponIssueStatus[] = new boolean[5];
+    private static boolean hasStepCounter;
 
+    private Sensor accel;
+    private SensorManager sensorManager;
+
+    private AccelStepDetector mAccelStepDetector;
     private CouponDbHandler dbHandler = new CouponDbHandler(this);
 
 
@@ -68,6 +73,8 @@ public class StepListener extends Service implements SensorEventListener{
     public IBinder onBind(Intent intent) {
         return mBinder;
     }
+
+
 
     public class StepBinder extends Binder {
         public StepListener getService() {
@@ -79,7 +86,12 @@ public class StepListener extends Service implements SensorEventListener{
     public void onSensorChanged(SensorEvent sensorEvent) {
         // Check for false values
 
-        if(sensorEvent.values[0] > Integer.MAX_VALUE)
+        if (sensorEvent.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
+            mAccelStepDetector.updateAccel(
+                    sensorEvent.timestamp, sensorEvent.values[0], sensorEvent.values[1], sensorEvent.values[2]);
+        }
+
+        else if(sensorEvent.values[0] > Integer.MAX_VALUE)
         {
             if (BuildConfig.DEBUG)
                 Log.d(TAG, "probably a wrong value " + sensorEvent.values[0]);
@@ -99,6 +111,14 @@ public class StepListener extends Service implements SensorEventListener{
             sendCouponsAccordingToMilestones(steps);
 
         }
+    }
+
+    // obtains the time at which the step was detected by accelerometer
+    @Override
+    public void step(long timeNs) {
+        steps++;
+        Log.d(TAG, "no of steps received by accelerometer " + steps);
+        sendCouponsAccordingToMilestones(steps);
     }
 
     private String getMallId(){
@@ -203,7 +223,15 @@ public class StepListener extends Service implements SensorEventListener{
         if(BuildConfig.DEBUG)
             Log.d(TAG, "StepListener Oncreate");
 
-        // reRegisterSensor();
+        hasStepCounter = getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER);
+
+        // Initialize accelerometer step Detector if stepCounter is not found
+        sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
+        if(!hasStepCounter){
+            accel = sensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+            mAccelStepDetector = new AccelStepDetector();
+            mAccelStepDetector.registerListener(this);
+        }
 
         // prevent service from stopping when the phone goes to deep sleep in api >= 23
         ignoreDozeOptimization();
@@ -326,12 +354,19 @@ public class StepListener extends Service implements SensorEventListener{
         if(BuildConfig.DEBUG)
             Log.d(TAG, "un-register sensor listener");
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
-        try{
-            sm.unregisterListener(this);
-        } catch (Exception e){
-            if(BuildConfig.DEBUG) Log.d(TAG, "error in un registering sensor listener");
-            e.printStackTrace();
+        if(hasStepCounter && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            try{
+                sm.unregisterListener(this);
+            } catch (Exception e){
+                if(BuildConfig.DEBUG) Log.d(TAG, "error in un registering sensor listener");
+                e.printStackTrace();
+            }
         }
+
+        else{
+            sensorManager.unregisterListener(this);
+        }
+
     }
 
     public void reRegisterSensor()
@@ -349,8 +384,17 @@ public class StepListener extends Service implements SensorEventListener{
             Log.d(TAG, "default: " + sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER).getName());
         }
 
-        boolean hasStepCounter = getPackageManager().hasSystemFeature(PackageManager.FEATURE_SENSOR_STEP_COUNTER);
-        if(hasStepCounter)
+        if(hasStepCounter && Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT){
+            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER),
+                    SensorManager.SENSOR_DELAY_NORMAL, 1000);
+        }
+
+        // Use accelerometer to count steps
+        else{
+            sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_FASTEST);
+        }
+
+        /*if(hasStepCounter)
         {
             if(BuildConfig.DEBUG)
             {
@@ -374,7 +418,7 @@ public class StepListener extends Service implements SensorEventListener{
         {
             if(BuildConfig.DEBUG)
                 Log.d(TAG, "You need to have device >= kitkat");
-        }
+        }*/
 
     }
 
