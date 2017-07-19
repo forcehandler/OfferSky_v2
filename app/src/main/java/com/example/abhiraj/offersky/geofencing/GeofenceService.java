@@ -1,5 +1,7 @@
 package com.example.abhiraj.offersky.geofencing;
 
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
 import android.content.BroadcastReceiver;
@@ -8,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Binder;
@@ -22,7 +25,11 @@ import android.util.Log;
 
 import com.example.abhiraj.offersky.BuildConfig;
 import com.example.abhiraj.offersky.Constants;
+import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.model.MallGeoFence;
+import com.example.abhiraj.offersky.ui.MallSelectActivity;
+import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.ResultCallback;
@@ -32,6 +39,8 @@ import com.google.android.gms.location.GeofencingRequest;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+
+import java.util.Calendar;
 
 /**
  * Created by Abhiraj on 24-04-2017.
@@ -440,18 +449,35 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
 
     private void sendUiUpdateBroadcast(boolean isEarning) {
 
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+
         Intent fabButtonIconIntent = new Intent();
         if(isEarning){
             Log.d(TAG, "sending is earning icon broadcast");
             fabButtonIconIntent.setAction(Constants.Geofence.SHOW_EARNING_ICON);
             LocalBroadcastManager.getInstance(getApplicationContext())
                     .sendBroadcast(fabButtonIconIntent);
+            editor.putString(Constants.SharedPreferences.EARNING_STATUS, Constants.SharedPreferences.EARNING);
+            editor.commit();
+
+            //update the mall entry data on firebase
+            String timeOfEntry = Calendar.getInstance().getTimeInMillis() + "";
+            FirebaseUtils.addMallVisit(OfferSkyUtils.getCurrentMallId(this), timeOfEntry, true);
         }
         else{
             Log.d(TAG, "sending default icon broadcast");
             fabButtonIconIntent.setAction(Constants.Geofence.SHOW_DEFAULT_ICON);
             LocalBroadcastManager.getInstance(getApplicationContext())
                     .sendBroadcast(fabButtonIconIntent);
+            editor.putString(Constants.SharedPreferences.EARNING_STATUS, Constants.SharedPreferences.NOT_EARNING);
+            editor.commit();
+
+            //update the unsuccessful mall entry data on firebase
+            String timeOfEntry = Calendar.getInstance().getTimeInMillis() + "";
+            FirebaseUtils.addMallVisit(OfferSkyUtils.getCurrentMallId(this), timeOfEntry, false);
+
             shutdownGeofenceService();
 
         }
@@ -627,9 +653,17 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
     int noOfAttempts = 1;
     private void checkIfUserIsInValidMall(){
 
+        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                Context.MODE_PRIVATE);
+        final SharedPreferences.Editor editor = sharedPreferences.edit();
+
         if(isInsideGeofence){
             Log.d(TAG, "user is in valid mall instantly");
             startGeofenceAccordingToUserState();
+            // To hide the progress dialog if the main activity resumes from background
+            editor.putString(Constants.SharedPreferences.MALL_CHECK_STATUS,
+                    Constants.SharedPreferences.MALL_CHECK_STATUS_NOT_CHECKING);
+            editor.commit();
         }
         else{
 
@@ -726,6 +760,11 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
             /*Thread geofenceEntranceCheckThread = new Thread(geofenceEntranceCheckRunnable);
             geofenceEntranceCheckThread.start();*/
 
+            // To hide the progress dialog if the main activity resumes from background
+            editor.putString(Constants.SharedPreferences.MALL_CHECK_STATUS,
+                    Constants.SharedPreferences.MALL_CHECK_STATUS_CHECKING);
+            editor.commit();
+
             final Handler handler = new Handler();
             Runnable runnable = new Runnable() {
                 @Override
@@ -733,6 +772,10 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
                     if(isInsideGeofence){
                         Log.d(TAG, "inside valid mall after 8 second check");
                         startGeofenceAccordingToUserState();
+                        // To show the progress dialog if the main activity resumes from background
+                        editor.putString(Constants.SharedPreferences.MALL_CHECK_STATUS,
+                                Constants.SharedPreferences.MALL_CHECK_STATUS_NOT_CHECKING);
+                        editor.commit();
                     }
 
 
@@ -745,6 +788,35 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
                     else if(noOfAttempts == 5){
                         Log.d(TAG, "after 5 attempts still not in mall so display invalid mall");
                         Log.d(TAG, "In invalid mall please select A VALID MALL");
+
+                        
+                        // Show alert dialog of incorrect mall being selected and launch mall
+                        // select activity
+
+                        // maybe send a notification and display a dialog if the user is currently in the app
+
+                        // Intent to start the mall select Activity
+                        Intent notificationIntent = new Intent(GeofenceService.this, MallSelectActivity.class);
+
+
+                        PendingIntent notificationPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+                                notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                        // Creating and sending Notification
+                        NotificationManager notificationMng =
+                                (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
+
+                        Notification notification = OfferSkyUtils.createNotificationBuilder(GeofenceService.this,
+                                getResources().getString(R.string.Invalid_mall_title),
+                                getResources().getString(R.string.select_diff_mall_message), notificationPendingIntent).build();
+                        notificationMng.notify(
+                                1339,
+                                notification);
+
+                        // To hide the progress dialog if the main activity resumes from background
+                        editor.putString(Constants.SharedPreferences.MALL_CHECK_STATUS,
+                                Constants.SharedPreferences.MALL_CHECK_STATUS_NOT_CHECKING);
+                        editor.commit();
+
                         if(mBound){
                             unbindService(mStepConnection);
                             mBound = false;

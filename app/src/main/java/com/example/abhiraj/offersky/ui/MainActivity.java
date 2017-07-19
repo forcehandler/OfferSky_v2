@@ -51,7 +51,9 @@ import com.example.abhiraj.offersky.drawable.BadgeDrawable;
 import com.example.abhiraj.offersky.geofencing.GeofenceService;
 import com.example.abhiraj.offersky.model.Mall;
 import com.example.abhiraj.offersky.model.Shop;
+import com.example.abhiraj.offersky.utils.CouponUtils;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -92,6 +94,8 @@ public class MainActivity extends BaseActivity
 
     private GeofenceService mGeofenceService;
 
+    private SharedPreferences sharedPreferences;
+
 
     @BindView(R.id.fab) FloatingActionButton fab;
     @BindView(R.id.tabs) TabLayout tabLayout;
@@ -113,19 +117,13 @@ public class MainActivity extends BaseActivity
                 new IntentFilter(Constants.Broadcast.MALL_DATA_READY));
         LocalBroadcastManager.getInstance(this).registerReceiver(dataReadyReceiver,
                 new IntentFilter(Constants.Broadcast.VISITOR_DATA_READY));
+        LocalBroadcastManager.getInstance(this).registerReceiver(couponAllottedReceiver,
+                new IntentFilter(Constants.Broadcast.COUPON_ALLOT));
 
         if(savedInstanceState != null){
             tabState = (TabState) savedInstanceState.getSerializable(TABSTATE_KEY);
         }
 
-        /*fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-                setBadgeCount(MainActivity.this, notification_icon, "7");
-            }
-        });*/
         fab.setOnClickListener(this);
 
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
@@ -139,7 +137,7 @@ public class MainActivity extends BaseActivity
 
         // TODO: Replace with proper implementation
         // Get mall
-        SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+        sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
                 Context.MODE_PRIVATE);
         String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
 
@@ -153,6 +151,24 @@ public class MainActivity extends BaseActivity
 
     }
 
+    @Override
+    protected void onResume() {
+        String earningStatus = sharedPreferences.getString(Constants.SharedPreferences.EARNING_STATUS,
+                Constants.SharedPreferences.NOT_EARNING);
+        if (earningStatus.equals(Constants.SharedPreferences.EARNING)){
+            fab.setImageResource(R.drawable.ic_menu_manage);
+        }
+        else if(earningStatus.equals(Constants.SharedPreferences.NOT_EARNING)){
+            fab.setImageResource(android.R.drawable.ic_dialog_email);
+        }
+        String progressStatus = sharedPreferences.getString(Constants.SharedPreferences.MALL_CHECK_STATUS,
+                Constants.SharedPreferences.MALL_CHECK_STATUS_NOT_CHECKING);
+        if(!progressStatus.equals(Constants.SharedPreferences.MALL_CHECK_STATUS_CHECKING)){
+            OfferSkyUtils.hideProgressDialog();
+        }
+
+        super.onResume();
+    }
 
     @Override
     public void onBackPressed() {
@@ -166,12 +182,19 @@ public class MainActivity extends BaseActivity
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
+
         // Inflate the menu; this adds items to the action bar if it is present.
+        Log.d(TAG, "onCreateOptionsMenu()");
         getMenuInflater().inflate(R.menu.main, menu);
 
         MenuItem itemCart = menu.findItem(R.id.action_cart);
         notification_icon = (LayerDrawable) itemCart.getIcon();
-        setBadgeCount(this, notification_icon, "9");
+
+        // show the number of available coupons to the user as badge
+        /*String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
+                OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
+        Log.d(TAG, "coupon count obtained for badge = " + couponCount);
+        setBadgeCount(this, notification_icon, couponCount);*/
 
         final MenuItem searchItem = menu.findItem(R.id.action_search);
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
@@ -189,7 +212,10 @@ public class MainActivity extends BaseActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_cart) {
             Log.d(TAG, "cart clicked");
-            setBadgeCount(this, notification_icon, "0");
+            // setBadgeCount(this, notification_icon, "0");
+            // Show the earned coupons
+            Intent intent = new Intent(MainActivity.this, CouponActivity.class);
+            startActivity(intent);
             return true;
         }
 
@@ -214,10 +240,12 @@ public class MainActivity extends BaseActivity
             startActivity(intent);
 
         } else if (id == R.id.nav_change_mall) {
-            Intent intent = new Intent(MainActivity.this, MallSelectActivity.class);
-            intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
-            startActivity(intent);
-            finish();
+            if(!isEarningSessionInProgress) {
+                Intent intent = new Intent(MainActivity.this, MallSelectActivity.class);
+                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                startActivity(intent);
+                finish();
+            }
 
         } else if (id == R.id.nav_manage) {
 
@@ -604,11 +632,28 @@ public class MainActivity extends BaseActivity
                 setupTestRecyclerView();
                 isMallReady = true;
                 onTabSelected(bottomNavigation.getCurrentItem(), true);
+
+                // set the badge icon for coupon count
+                String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
+                        OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
+                Log.d(TAG, "coupon count obtained for badge = " + couponCount);
+                setBadgeCount(MainActivity.this, notification_icon, couponCount);
             }
             else if(intent.getAction().equals(Constants.Broadcast.VISITOR_DATA_READY)){
                 // Grab hold of the coupons according to the number
             }
 
+        }
+    };
+
+    private BroadcastReceiver couponAllottedReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // set the badge icon for coupon count
+            String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
+                    OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
+            Log.d(TAG, "coupon count obtained for badge = " + couponCount);
+            setBadgeCount(MainActivity.this, notification_icon, couponCount);
         }
     };
 
@@ -704,8 +749,8 @@ public class MainActivity extends BaseActivity
                     if (!checkPermission()) {
                         askPermission();
                     } else {
-                        startEarningSequence(); 
-
+                        startEarningSequence();
+                        OfferSkyUtils.showProgressDialog(this, getResources().getString(R.string.checking_mall));
                     }
 
 
@@ -971,6 +1016,7 @@ public class MainActivity extends BaseActivity
         public void onReceive(Context context, Intent intent) {
 
             Log.d(TAG, "received fab icon update broadcast");
+            OfferSkyUtils.hideProgressDialog();OfferSkyUtils.hideProgressDialog();
             if(intent.getAction().equals(Constants.Geofence.SHOW_EARNING_ICON)){
                 fab.setImageResource(R.drawable.ic_menu_manage);
                 isEarningSessionInProgress = true;
@@ -980,11 +1026,22 @@ public class MainActivity extends BaseActivity
             else if(intent.getAction().equals(Constants.Geofence.SHOW_DEFAULT_ICON)){
                 fab.setImageResource(android.R.drawable.ic_dialog_email);
                 isEarningSessionInProgress = false;
+
+                new AlertDialog.Builder(MainActivity.this).setTitle(R.string.Invalid_mall_title)
+                        .setMessage(R.string.select_diff_mall_message)
+                        .setPositiveButton("OK", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                dialogInterface.dismiss();
+                                Intent intent = new Intent(getApplicationContext(), MallSelectActivity.class);
+                                startActivity(intent);
+                            }
+                        }).show();
             }
         }
     };
 
-    private BroadcastReceiver visitorNumberReadyReceiver = new BroadcastReceiver() {
+  /*  private BroadcastReceiver visitorNumberReadyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             Log.d(TAG, "received Visitor DATA READY broadcast");
@@ -993,7 +1050,7 @@ public class MainActivity extends BaseActivity
             // start the pedometer service with the object put in the intent extra
             // coupon class has been made serializable
         }
-    };
+    };*/
 
     @Override
     public void onStart(){

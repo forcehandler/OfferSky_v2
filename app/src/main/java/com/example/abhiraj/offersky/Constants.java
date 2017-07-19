@@ -9,6 +9,7 @@ public class Constants {
     public interface Broadcast {
         String MALL_DATA_READY = "malldataReadybroadcast";
         String VISITOR_DATA_READY = "visitordataReadybroadcast";
+        String COUPON_ALLOT = "coupon_allotted";
     }
 
     public interface IntentKeys{
@@ -21,12 +22,6 @@ public class Constants {
         String USER_DEFAULT_PASSWORD = "ds123456789";
     }
 
-    public interface Broadcasts
-    {
-        static String BROADCAST_SHOP_UPDATE = "shop_update";
-        static final String BROADCAST_STEPS = "steps_broadcast";
-        static final String STEPS = "steps";
-    }
 
     public interface Geofence
     {
@@ -68,6 +63,15 @@ public class Constants {
         static final String STEPS = "stores_steps";
         static final String MALL_ID = "mallId";
         static final String USER_PREF_FILE = "user_pref_file";
+        String EARNING_STATUS = "earning_status";
+        String EARNING = "earning";
+        String NOT_EARNING = "not_earning";
+        // to show or hide progress dialog
+        String MALL_CHECK_STATUS = "mall_check_status";
+        String MALL_CHECK_STATUS_CHECKING = "checking mall status";
+        String MALL_CHECK_STATUS_NOT_CHECKING = "not checking mall status";
+
+        String MALL_JSON = "mall_data_json_string";
     }
 
 }

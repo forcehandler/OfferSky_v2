@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.graphics.Color;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
@@ -35,8 +36,11 @@ import com.example.abhiraj.offersky.model.Coupon;
 import com.example.abhiraj.offersky.model.Mall;
 import com.example.abhiraj.offersky.ui.MainActivity;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.example.abhiraj.offersky.utils.OfferSkyUtils;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Map;
 
 /**
@@ -144,7 +148,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(0);
                 Log.d(TAG, "sending first coupon to user and first milestone achieved");
-                 sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                 sendCouponNotification(coupon);
                 couponIssueStatus[0] = true;
 
             }
@@ -156,7 +160,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(1);
                 Log.d(TAG, "sending second coupon to user and first milestone achieved");
-                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                sendCouponNotification(coupon);
                 couponIssueStatus[1] = true;
             }
         }
@@ -168,7 +172,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(2);
                 Log.d(TAG, "sending third coupon to user and third milestone achieved");
-                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                sendCouponNotification(coupon);
                 couponIssueStatus[2] = true;
             }
         }
@@ -179,7 +183,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(3);
                 Log.d(TAG, "sending fourth coupon to user and first milestone achieved");
-                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                sendCouponNotification(coupon);
                 couponIssueStatus[3] = true;
             }
         }
@@ -190,7 +194,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(4);
                 Log.d(TAG, "sending fifth coupon to user and first milestone achieved");
-                sendCouponNotification(coupon.getBrand(), coupon.getDescription());
+                sendCouponNotification(coupon);
                 couponIssueStatus[4] = true;
             }
         }
@@ -198,7 +202,13 @@ public class StepListener extends Service implements SensorEventListener, Accele
 
         if(coupon != null){
             Log.d(TAG, "adding coupon id = " + coupon.getCouponId() + " to the allottedCouponDb");
+
             dbHandler.addCouponToAllottedList(coupon, getMallId());
+
+            String timeOfAllotment = Calendar.getInstance().getTimeInMillis() + "";
+            FirebaseUtils.addCouponAllotted(coupon.getCouponId(), timeOfAllotment);
+
+            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent().setAction(Constants.Broadcast.COUPON_ALLOT));
         }
     }
 
@@ -328,6 +338,9 @@ public class StepListener extends Service implements SensorEventListener, Accele
                         Context.MODE_PRIVATE);
                 String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
                 FirebaseUtils.getMall(StepListener.this, mallId);
+
+                // increase the visitor number by 1
+                FirebaseUtils.updateVisitorNumber(OfferSkyUtils.getCurrentMallId(StepListener.this));
                 // handle rest of code in get mall part of data ready broadcast ie get the coupons
             }
 
@@ -340,11 +353,12 @@ public class StepListener extends Service implements SensorEventListener, Accele
             Log.d(TAG, "received userMallEntryConfirm Broadcast");
             // TODO: IMPORTANT Check for active internet connection before proceeding
             // Also check if active running net connection ensures retrieval of the latest data
+            // Get the visitor number
             SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
                     Context.MODE_PRIVATE);
             String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
             FirebaseUtils.getVisitorNumber(StepListener.this, mallId);
-
+            // Update the visitor number if it is valid
             // now the rest of the code is handled in the visitorNumberReadyBroadcast implementation
         }
     };
@@ -443,30 +457,46 @@ public class StepListener extends Service implements SensorEventListener, Accele
     }
 
 
-    public void sendCouponNotification(String title, String msg){
+    public void sendCouponNotification(Coupon coupon){
 
-        Log.i(TAG, "sendCouponNotification: " + msg);
+        Log.i(TAG, "sendCouponNotification: " + coupon.getBrand());
 
-        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
 
 
-        PendingIntent notificationPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
+        PendingIntent notificationPendingIntent = PendingIntent.getActivity(this, 0,
                 notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         // Creating and sending Notification
         NotificationManager notificationMng =
                 (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
 
-        Notification notification = createNotification(title, msg, notificationPendingIntent);
+
+        NotificationCompat.Builder notificationBuilder = createNotification(coupon.getBrand(), coupon.getDescription(), notificationPendingIntent);
+
+        // TODO: Important: Create notification with the coupon image
+       try{
+           Bitmap bigCouponPic = Picasso.with(this).load(coupon.getCouponImageURL()).get();
+           notificationBuilder.setStyle(new NotificationCompat.BigPictureStyle().bigPicture(bigCouponPic));
+       } catch(Exception e){
+            Log.e(TAG, e.toString() + " error setting coupon picture");
+       }
+
+        notificationBuilder.setStyle(new NotificationCompat.BigPictureStyle());
+        final int notifId = coupon.hashCode();
+        final int bigIconId = getResources().getIdentifier("android:id/big_picture", null, null);
+
+        //Target t1 = new Target()
+
         notificationMng.notify(
-                1338,
-                notification);
+                coupon.hashCode(),
+                notificationBuilder.build());
     }
 
     public void sendEarningNotification(String title, String msg ) {
         Log.i(TAG, "sendEarningNotification: " + msg );
 
         // Intent to start the main Activity
-        Intent notificationIntent = new Intent(getApplicationContext(), MainActivity.class);
+        Intent notificationIntent = new Intent(this, MainActivity.class);
 
 
         PendingIntent notificationPendingIntent = PendingIntent.getActivity(getApplicationContext(), 0,
@@ -475,7 +505,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
         NotificationManager notificationMng =
                 (NotificationManager) getSystemService( Context.NOTIFICATION_SERVICE );
 
-        Notification notification = createNotification(title, msg, notificationPendingIntent);
+        Notification notification = createNotification(title, msg, notificationPendingIntent).build();
         notificationMng.notify(
                 1337,
                 notification);
@@ -484,7 +514,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
 
     }
 
-    private Notification createNotification(String title, String msg, PendingIntent notificationPendingIntent) {
+    private NotificationCompat.Builder createNotification(String title, String msg, PendingIntent notificationPendingIntent) {
 
         notificationBuilder
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -494,7 +524,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 .setContentIntent(notificationPendingIntent)
                 .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
                 .setAutoCancel(true);
-        return notificationBuilder.build();
+        return notificationBuilder;
     }
 
     private void ignoreDozeOptimization() {

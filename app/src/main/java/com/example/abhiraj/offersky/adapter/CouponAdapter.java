@@ -51,6 +51,7 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
         return CouponUtils.isCouponRedeemed(mContext, coupon);
     }
 
+
     @Override
     public CouponViewHolder onCreateViewHolder(LayoutInflater inflater, ViewGroup parent, int viewType) {
 
