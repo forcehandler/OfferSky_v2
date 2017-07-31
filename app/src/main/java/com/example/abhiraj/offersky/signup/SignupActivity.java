@@ -15,7 +15,7 @@ import com.example.abhiraj.offersky.BaseActivity;
 import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.model.User;
-import com.example.abhiraj.offersky.ui.MainActivity;
+import com.example.abhiraj.offersky.ui.MallSelectActivity;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -215,7 +215,7 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
 
 
 
-                    Intent intent = new Intent(SignupActivity.this, MainActivity.class);
+                    Intent intent = new Intent(SignupActivity.this, MallSelectActivity.class);
                     intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(intent);
                     finish();

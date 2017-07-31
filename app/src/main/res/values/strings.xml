@@ -27,7 +27,7 @@
     <string name="GPS_required_message">We require GPS to ensure best shopping experience for you. Please turn it on.</string>
     <string name="GPS_required_title">Attention</string>
 
-    <string name = "Invalid_mall_title">Invalid mall</string>
+    <string name="Invalid_mall_title">Invalid mall</string>
     <string name="select_diff_mall_message">Please select the mall you are currently in.</string>
 
     <string name="checking_mall">Verifying presence in mall.</string>

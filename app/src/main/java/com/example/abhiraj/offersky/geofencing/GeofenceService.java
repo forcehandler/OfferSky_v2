@@ -129,7 +129,7 @@ public class GeofenceService extends Service implements GoogleApiClient.Connecti
             Log.e(TAG, e.toString());
             Log.d(TAG, "error while clearing geofence in onDestroy");
         }
-        if(googleApiClient.isConnected()) {
+        if(googleApiClient.isConnected() && googleApiClient != null) {
             googleApiClient.disconnect();
         }
         stopSelf();

@@ -3,6 +3,7 @@ package com.example.abhiraj.offersky.model;
 import com.github.wrdlbrnft.sortedlistadapter.SortedListAdapter;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Created by Abhiraj on 14-04-2017.
@@ -15,13 +16,14 @@ public class Shop implements SortedListAdapter.ViewModel{
     private String email;
     private String location;
     private HashMap<String, Offer> mOffers;
-    HashMap<String, String> mCategories;
+    private HashMap<String, String> mCategories;
     private String name;
     boolean hasMenu;
     String gender;
     private String shopImageURL;
     private String brandImageURL;
 
+    private List<String> shopTourImageURLs;
     // TODO: Add list of search tags
 
 
@@ -116,5 +118,13 @@ public class Shop implements SortedListAdapter.ViewModel{
 
     public void setHasMenu(boolean hasMenu) {
         this.hasMenu = hasMenu;
+    }
+
+    public List<String> getShopTourImageURLs() {
+        return shopTourImageURLs;
+    }
+
+    public void setShopTourImageURLs(List<String> shopTourImageURLs) {
+        this.shopTourImageURLs = shopTourImageURLs;
     }
 }

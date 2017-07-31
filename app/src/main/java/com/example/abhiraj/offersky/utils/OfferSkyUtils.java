@@ -7,9 +7,12 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.support.v4.app.NotificationCompat;
+import android.util.Log;
 
 import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
+import com.example.abhiraj.offersky.model.Mall;
+import com.google.gson.Gson;
 
 /**
  * Created by Abhiraj on 30-06-2017.
@@ -27,6 +30,18 @@ public class OfferSkyUtils {
                 Context.MODE_PRIVATE);
         String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
         return mallId;
+    }
+
+    public static Mall getCurrentMall(Context context){
+        Log.d(TAG, "getMall()");
+
+        SharedPreferences sharedPreferences = context
+                .getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                        Context.MODE_PRIVATE);
+        String mall_string = sharedPreferences.getString(Constants.SharedPreferences.MALL_JSON, "");
+        Gson mall_gson = new Gson();
+        Mall mall = mall_gson.fromJson(mall_string, Mall.class);
+        return mall;
     }
 
     public static NotificationCompat.Builder createNotificationBuilder(Context context, String title, String msg,  PendingIntent notificationPendingIntent){

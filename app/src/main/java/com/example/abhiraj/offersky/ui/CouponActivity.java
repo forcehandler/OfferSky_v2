@@ -2,16 +2,15 @@ package com.example.abhiraj.offersky.ui;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
 import android.support.v4.content.LocalBroadcastManager;
-import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.TextView;
 
@@ -19,13 +18,12 @@ import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.DbHandler.CouponDbHandler;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.adapter.CouponAdapter;
+import com.example.abhiraj.offersky.fragment.CouponBottomSheetFragment;
 import com.example.abhiraj.offersky.model.Coupon;
 import com.example.abhiraj.offersky.utils.CouponUtils;
-import com.example.abhiraj.offersky.utils.FirebaseUtils;
 import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Comparator;
 import java.util.List;
 
@@ -148,7 +146,9 @@ public class CouponActivity extends AppCompatActivity  implements  CouponAdapter
     @Override
     public void onCouponCodeClick(final Coupon coupon) {
         Log.d(TAG, "Coupon clicked is = " + coupon.getBrand());
-        new AlertDialog.Builder(this)
+
+        // TODO: Temporarily removed the code dialog to test the botttom sheet
+        /*new AlertDialog.Builder(this)
                 .setTitle("Code")
                 .setMessage("The coupon code is " + coupon.getCode())
                 .setPositiveButton("OK", new DialogInterface.OnClickListener() {
@@ -163,7 +163,11 @@ public class CouponActivity extends AppCompatActivity  implements  CouponAdapter
                             FirebaseUtils.addCouponRedeemed(coupon.getCouponId(), timeofRedeem);
                         }
                     }
-                }).show();
+                }).show();*/
+
+        CouponBottomSheetFragment couponBottomSheetFragment = CouponBottomSheetFragment.newInstance();
+        couponBottomSheetFragment.setCoupon(coupon);
+        couponBottomSheetFragment.show(getSupportFragmentManager(), couponBottomSheetFragment.getTag());
 
     }
 
@@ -176,6 +180,16 @@ public class CouponActivity extends AppCompatActivity  implements  CouponAdapter
             coupon_rv.setVisibility(View.VISIBLE);
             empty_msg_tv.setVisibility(View.GONE);
         }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId()==android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+
     }
 
 }

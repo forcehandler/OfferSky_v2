@@ -15,6 +15,7 @@ public class Constants {
     public interface IntentKeys{
         String SHOP_ID = "shopID";
         String VISITOR_NO = "visitor_no";
+        String SHOP_PHOTOS_LIST = "shop_photos";
     }
 
     public interface Signup{

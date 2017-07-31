@@ -84,7 +84,8 @@ public class MainActivity extends BaseActivity
 
 
     private enum TabState {Shopping, Food}
-    LayerDrawable notification_icon;
+    private static LayerDrawable coupon_notification_icon;
+    private static LayerDrawable event_notification_icon;
 
     private TabState tabState = TabState.Shopping;
     private boolean isMallReady = false;
@@ -187,14 +188,16 @@ public class MainActivity extends BaseActivity
         Log.d(TAG, "onCreateOptionsMenu()");
         getMenuInflater().inflate(R.menu.main, menu);
 
-        MenuItem itemCart = menu.findItem(R.id.action_cart);
-        notification_icon = (LayerDrawable) itemCart.getIcon();
+        MenuItem couponMenuItem = menu.findItem(R.id.action_cart);
+        MenuItem eventMenuItem = menu.findItem(R.id.action_events);
 
+        coupon_notification_icon = (LayerDrawable) couponMenuItem.getIcon();
+        event_notification_icon = (LayerDrawable) eventMenuItem.getIcon();
         // show the number of available coupons to the user as badge
         /*String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
                 OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
         Log.d(TAG, "coupon count obtained for badge = " + couponCount);
-        setBadgeCount(this, notification_icon, couponCount);*/
+        setBadgeCount(this, coupon_notification_icon, couponCount);*/
 
         final MenuItem searchItem = menu.findItem(R.id.action_search);
         final SearchView searchView = (SearchView) MenuItemCompat.getActionView(searchItem);
@@ -212,13 +215,18 @@ public class MainActivity extends BaseActivity
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_cart) {
             Log.d(TAG, "cart clicked");
-            // setBadgeCount(this, notification_icon, "0");
+            // setBadgeCount(this, coupon_notification_icon, "0");
             // Show the earned coupons
             Intent intent = new Intent(MainActivity.this, CouponActivity.class);
             startActivity(intent);
             return true;
         }
-
+        else if(id == R.id.action_events){
+            Log.d(TAG, "events clicked");
+            Intent intent = new Intent(MainActivity.this, EventActivity.class);
+            startActivity(intent);
+            return true;
+        }
         return super.onOptionsItemSelected(item);
     }
 
@@ -478,7 +486,8 @@ public class MainActivity extends BaseActivity
 
         mModels = new ArrayList<>();
 
-        mModels.addAll(FirebaseUtils.sMall.getShops().values());
+        Mall mall = OfferSkyUtils.getCurrentMall(this);
+        mModels.addAll(mall.getShops().values());
         shopAdapter.edit().replaceAll(mModels)
                 .commit();
 
@@ -637,7 +646,13 @@ public class MainActivity extends BaseActivity
                 String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
                         OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
                 Log.d(TAG, "coupon count obtained for badge = " + couponCount);
-                setBadgeCount(MainActivity.this, notification_icon, couponCount);
+                setBadgeCount(MainActivity.this, coupon_notification_icon, couponCount);
+
+                //Set badge icon for event count
+                Mall mall = OfferSkyUtils.getCurrentMall(MainActivity.this);
+                String eventCount = mall.getEvents().size() + "";
+                Log.d(TAG, "event count obtained for badge = " + eventCount);
+                setBadgeCount(MainActivity.this, event_notification_icon, eventCount);
             }
             else if(intent.getAction().equals(Constants.Broadcast.VISITOR_DATA_READY)){
                 // Grab hold of the coupons according to the number
@@ -653,7 +668,7 @@ public class MainActivity extends BaseActivity
             String couponCount = CouponUtils.getAllotableCouponCount(MainActivity.this,
                     OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
             Log.d(TAG, "coupon count obtained for badge = " + couponCount);
-            setBadgeCount(MainActivity.this, notification_icon, couponCount);
+            setBadgeCount(MainActivity.this, coupon_notification_icon, couponCount);
         }
     };
 

@@ -1,8 +1,8 @@
 package com.example.abhiraj.offersky.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.LinearSnapHelper;
@@ -10,6 +10,7 @@ import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -44,23 +45,16 @@ public class ShopDetailsActivity extends AppCompatActivity {
     TextView offer_description_tv;
     @BindView(R.id.tv_location) TextView location_tv;
     @BindView(R.id.tv_shop_description) TextView shop_description_tv;
+    @BindView(R.id.fab)FloatingActionButton shopTourFab;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_shop_details);
         ButterKnife.bind(this);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });
 
         // for the collapsible toolbar
         if(getSupportActionBar() != null) {
@@ -104,6 +98,24 @@ public class ShopDetailsActivity extends AppCompatActivity {
 
             // Set description
             shop_description_tv.setText(shop.getGender());
+
+            // Set ShopTour
+            if(shop.getShopTourImageURLs() == null){
+                shopTourFab.setVisibility(View.GONE);
+            }
+            shopTourFab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    Intent intent = new Intent(ShopDetailsActivity.this, ShopPhotoActivity.class);
+                    ArrayList<String> shopTourPhotoURLs = new ArrayList<>();
+                    shopTourPhotoURLs.addAll(shop.getShopTourImageURLs());
+                    Log.d(TAG, "photo urls sending = " + shopTourPhotoURLs.toString());
+                    Log.d(TAG, "photo urls from shop object = " + shop.getShopTourImageURLs().get(0).toString());
+                    Log.d(TAG, "brand url from shop obtained = " + shop.getBrandImageURL());
+                    intent.putStringArrayListExtra(Constants.IntentKeys.SHOP_PHOTOS_LIST, shopTourPhotoURLs);
+                    startActivity(intent);
+                }
+            });
         }
         catch (Exception e){
             Log.e(TAG, e.toString());
@@ -161,5 +173,15 @@ public class ShopDetailsActivity extends AppCompatActivity {
         chip_rv.setLayoutManager(new LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false));
         ChipAdapter adapter = new ChipAdapter(categories);
         chip_rv.setAdapter(adapter);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId()==android.R.id.home) {
+            finish();
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+
     }
 }
