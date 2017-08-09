@@ -1,14 +1,20 @@
 package com.example.abhiraj.offersky.signup;
 
+import android.app.Dialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
 import android.support.design.widget.TextInputLayout;
+import android.support.v7.app.AlertDialog;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RadioButton;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.abhiraj.offersky.BaseActivity;
@@ -81,6 +87,7 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
     // authentication medium
     private int authentication_route = -1;
     // 0 for anpnymous and 1 for google sign in
+
 
     // Signin constant to check activity result
     private static final int RC_SIGN_IN = 9001;
@@ -387,10 +394,86 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
 
         //TODO: storing user values when the values are sane, in later version
         //TODO: store values in preferences after OTP is matched
-
+        // check internet connectivity
+        if(isNetworkAvailable(this)) {
+            createOTPVerificationDialog();
+        }
+        else
+        {
+            Toast.makeText(this, "Check Internet Connectivity", Toast.LENGTH_SHORT).show();
+        }
     }
 
+    private void createOTPVerificationDialog(){
 
+        Log.d(TAG, "createOTPVerificationDialog()");
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+
+        LayoutInflater inflater = this.getLayoutInflater();
+        View dialogView = inflater.inflate(R.layout.otp_verification_dialog, null);
+        final EditText otp_et = (EditText) dialogView.findViewById(R.id.otp_et);
+        final TextView count_down_tv = (TextView) dialogView.findViewById(R.id.otp_countdown_tv);
+
+        builder.setView(dialogView);
+        builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                if(otp_et.getText().toString().trim().equals("")){
+                    Log.d(TAG, otp_et.getText().toString().equals(null) + " " + mOtpEditText.getText().toString());
+                    otp_et.setError("Please enter the otp");
+                }
+                else{
+                    if(mVerification != null) {
+                        mVerification.verify(otp_et.getText().toString());
+                    }
+
+                }
+            }
+        });
+        builder.setNegativeButton("Change Number", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.d(TAG, "user decided to change number");
+                dialogInterface.dismiss();
+            }
+        });
+        builder.setNeutralButton("Resend OTP", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                Log.d(TAG, "resending OTP");
+                if(mVerification != null) {
+                    mVerification.verify(mOtpEditText.getText().toString());
+                }
+            }
+        });
+
+        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+            @Override
+            public void onDismiss(DialogInterface dialogInterface) {
+
+            }
+        });
+
+        final AlertDialog otpDialog = builder.create();
+
+        otpDialog.show();
+        otpDialog.setCancelable(false);
+
+        otpDialog.getButton(Dialog.BUTTON_NEUTRAL).setEnabled(false);
+        new CountDownTimer(30000, 1000) {
+
+            public void onTick(long millisUntilFinished) {
+                count_down_tv.setText("seconds remaining: " + millisUntilFinished / 1000);
+                //here you can have your logic to set text to edittext
+            }
+
+            public void onFinish() {
+                otpDialog.getButton(Dialog.BUTTON_NEUTRAL).setEnabled(true);
+                count_down_tv.setVisibility(View.GONE);
+            }
+
+        }.start();
+    }
 
 
     //Methods for OTP from Msg91

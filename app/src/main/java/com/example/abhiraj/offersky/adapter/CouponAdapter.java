@@ -28,19 +28,19 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
 
     private final int REDEEMED_COUPON_TYPE = 1;
     private final int NOT_REDEEMED_COUPON_TYPE = 0;
-    private CouponCodeClickListener mCouponCodeClickListener;
+    private CouponClickListener mCouponClickListener;
 
     public CouponAdapter(Context context, Class<Coupon> itemClass, Comparator<Coupon> comparator,
-                         CouponCodeClickListener couponCodeClickListener) {
+                         CouponClickListener couponClickListener) {
         super(context, itemClass, comparator);
         mContext = context;
-        mCouponCodeClickListener = couponCodeClickListener;
+        mCouponClickListener = couponClickListener;
     }
 
-    /*public CouponAdapter(Context context, List<Coupon> coupons, CouponCodeClickListener couponCodeClickListener){
+    /*public CouponAdapter(Context context, List<Coupon> coupons, CouponClickListener couponCodeClickListener){
         mContext = context;
         mCoupons = coupons;
-        mCouponCodeClickListener = couponCodeClickListener;
+        mCouponClickListener = couponCodeClickListener;
 
     }*/
 
@@ -61,17 +61,17 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
             case REDEEMED_COUPON_TYPE:
                 Log.d(TAG, "Redeemed Coupon view holder created");
                 View view1 = inflater.inflate(R.layout.coupon_card, parent,false);
-                viewHolder = new CouponViewHolder(view1, mCouponCodeClickListener);
+                viewHolder = new CouponViewHolder(view1, mCouponClickListener);
                 break;
             case NOT_REDEEMED_COUPON_TYPE:
                 Log.d(TAG, "Not Redeemed Coupon view holder created");
                 View view2 = inflater.inflate(R.layout.new_coupon_card, parent,false);
-                viewHolder = new CouponViewHolder(view2, mCouponCodeClickListener);
+                viewHolder = new CouponViewHolder(view2, mCouponClickListener);
                 break;
 
             default:
                 View viewDef = inflater.inflate(R.layout.coupon_card, parent,false);
-                viewHolder = new CouponViewHolder(viewDef, mCouponCodeClickListener);
+                viewHolder = new CouponViewHolder(viewDef, mCouponClickListener);
                 break;
         }
 
@@ -109,7 +109,7 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
         private final String TAG = EventViewHolder.class.getSimpleName();
 
         private View mView;
-        private CouponAdapter.CouponCodeClickListener mCouponCodeClickListener;
+        private CouponAdapter.CouponClickListener mCouponClickListener;
 
         @BindView(R.id.iv_coupon)
         ImageView coupon_iv;
@@ -117,11 +117,11 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
         TextView coupon_tv;
         @BindView(R.id.btn_get_code)
         Button code_btn;
-        public CouponViewHolder(View itemView, CouponAdapter.CouponCodeClickListener couponCodeClickListener) {
+        public CouponViewHolder(View itemView, CouponAdapter.CouponClickListener couponCodeClickListener) {
             super(itemView);
             ButterKnife.bind(this, itemView);
             mView = itemView;
-            mCouponCodeClickListener = couponCodeClickListener;
+            mCouponClickListener = couponCodeClickListener;
 
             code_btn.setOnClickListener(this);
         }
@@ -143,14 +143,14 @@ public class CouponAdapter extends SortedListAdapter<Coupon> {
             if(view == code_btn){
                 // Call the code click implementation
                 Coupon coupon = mCoupons.get(getAdapterPosition());
-                mCouponCodeClickListener.onCouponCodeClick(coupon);
+                mCouponClickListener.onCouponClick(coupon);
             }
         }
     }*/
 
-    public interface CouponCodeClickListener{
+    public interface CouponClickListener {
 
-        void onCouponCodeClick(Coupon coupon);
+        void onCouponClick(Coupon coupon);
 
     }
 }

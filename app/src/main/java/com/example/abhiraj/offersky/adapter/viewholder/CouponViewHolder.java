@@ -2,7 +2,6 @@ package com.example.abhiraj.offersky.adapter.viewholder;
 
 import android.util.Log;
 import android.view.View;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -27,24 +26,25 @@ public class CouponViewHolder extends SortedListAdapter.ViewHolder<Coupon> imple
     private static final String TAG = CouponViewHolder.class.getSimpleName();
 
     private View mView;
-    private CouponAdapter.CouponCodeClickListener mCouponCodeClickListener;
+    private CouponAdapter.CouponClickListener mCouponClickListener;
     private static final String FORMAT = "%02d:%02d:%02d";
 
     @BindView(R.id.iv_coupon)
     ImageView coupon_iv;
     @BindView(R.id.tv_coupon)
     TextView coupon_tv;
-    @BindView(R.id.btn_get_code)
-    Button code_btn;
+    /*@BindView(R.id.btn_get_code)
+    Button code_btn;*/
     @BindView(R.id.tv_expiration_time)
     TextView expiration_tv;
-    public CouponViewHolder(View itemView, CouponAdapter.CouponCodeClickListener couponCodeClickListener) {
+    public CouponViewHolder(View itemView, CouponAdapter.CouponClickListener couponClickListener) {
         super(itemView);
         ButterKnife.bind(this, itemView);
         mView = itemView;
-        mCouponCodeClickListener = couponCodeClickListener;
+        mCouponClickListener = couponClickListener;
 
-        code_btn.setOnClickListener(this);
+        //code_btn.setOnClickListener(this);
+        mView.setOnClickListener(this);
     }
 
 
@@ -61,9 +61,12 @@ public class CouponViewHolder extends SortedListAdapter.ViewHolder<Coupon> imple
     @Override
     public void onClick(View view) {
 
-        if(view == code_btn){
+        /*if(view == code_btn){
             // Call the code click implementation
-            mCouponCodeClickListener.onCouponCodeClick(getCurrentItem());
+            mCouponClickListener.onCouponClick(getCurrentItem());
+        }*/
+        if(view == mView){
+            mCouponClickListener.onCouponClick(getCurrentItem());
         }
     }
 

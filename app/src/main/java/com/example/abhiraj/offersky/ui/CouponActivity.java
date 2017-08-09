@@ -30,7 +30,7 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class CouponActivity extends AppCompatActivity  implements  CouponAdapter.CouponCodeClickListener{
+public class CouponActivity extends AppCompatActivity  implements CouponAdapter.CouponClickListener {
 
     private static final String TAG = CouponActivity.class.getSimpleName();
 
@@ -144,7 +144,7 @@ public class CouponActivity extends AppCompatActivity  implements  CouponAdapter
     };
 
     @Override
-    public void onCouponCodeClick(final Coupon coupon) {
+    public void onCouponClick(final Coupon coupon) {
         Log.d(TAG, "Coupon clicked is = " + coupon.getBrand());
 
         // TODO: Temporarily removed the code dialog to test the botttom sheet

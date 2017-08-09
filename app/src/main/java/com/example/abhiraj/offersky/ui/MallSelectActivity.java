@@ -4,7 +4,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -12,6 +11,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Spinner;
 
+import com.example.abhiraj.offersky.BaseActivity;
 import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.google.firebase.database.DataSnapshot;
@@ -23,7 +23,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.util.ArrayList;
 import java.util.List;
 
-public class MallSelectActivity extends AppCompatActivity implements AdapterView.OnItemSelectedListener, View.OnClickListener {
+public class MallSelectActivity extends BaseActivity implements AdapterView.OnItemSelectedListener, View.OnClickListener {
 
     private Spinner mStateSpinner;
     private Spinner mCitySpinner;
@@ -41,6 +41,7 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
     static ArrayAdapter<String> mallAdapter;
 
     private String mallId;
+    private String mallName;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +68,7 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
 
         //statesList.add("Select State");
         stateAdapter = new ArrayAdapter<String>(MallSelectActivity.this, android.R.layout.simple_spinner_item, statesList);
+        showProgressDialog();
         getData("states", statesKey, statesList, stateAdapter);
 
 
@@ -84,7 +86,7 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
 
         cityAdapter = new ArrayAdapter<String>(MallSelectActivity.this, android.R.layout.simple_spinner_item, citiesList);
         cityAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
+        showProgressDialog();
         getData("state_cities/"+state_code, citiesKey, citiesList, cityAdapter);
 
         mCitySpinner.setAdapter(cityAdapter);
@@ -97,7 +99,7 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
 
         mallAdapter = new ArrayAdapter<String>(MallSelectActivity.this, android.R.layout.simple_spinner_item, mallsList);
         mallAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-
+        showProgressDialog();
         getData("city_malls/" + city_code, mallsKey, mallsList, mallAdapter);
         mMallSpinner.setAdapter(mallAdapter);
         mMallSpinner.setOnItemSelectedListener(this);
@@ -124,11 +126,8 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
                 Log.d(TAG, "key = " + mallsKey.get(pos));
                 // Store mallId in SharedPreferences
                 mallId = mallsKey.get(pos);
-                SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
-                        Context.MODE_PRIVATE);
-                SharedPreferences.Editor editor = sharedPreferences.edit();
-                editor.putString(Constants.SharedPreferences.MALL_ID, mallId);
-                editor.commit();
+                mallName = mallsList.get(pos);
+
                 break;
         }
 
@@ -156,6 +155,7 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
                     Log.d(TAG, ds.getValue().toString());
                 }
                 //statesList.addAll(statesKey.values());
+                hideProgressDialog();
                 adapter.notifyDataSetChanged();
             }
 
@@ -171,6 +171,13 @@ public class MallSelectActivity extends AppCompatActivity implements AdapterView
 
         if(view == selectBtn)
         {
+            SharedPreferences sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                    Context.MODE_PRIVATE);
+            SharedPreferences.Editor editor = sharedPreferences.edit();
+            editor.putString(Constants.SharedPreferences.MALL_ID, mallId);
+            editor.putString(Constants.SharedPreferences.MALL_NAME, mallName);
+            editor.commit();
+
             Intent intent = new Intent(this, MainActivity.class);
             intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK|Intent.FLAG_ACTIVITY_NEW_TASK);
             startActivity(intent);

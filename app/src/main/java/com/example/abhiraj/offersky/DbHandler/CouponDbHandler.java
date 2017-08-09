@@ -136,7 +136,7 @@ public class CouponDbHandler extends SQLiteOpenHelper {
 
         ContentValues cv = new ContentValues();
         String epoch_time = Calendar.getInstance().getTimeInMillis() + "";
-        cv.put(KEY_REDEEM_STATUS,epoch_time);   // time when the coupon was redeemed in millis
+        cv.put(KEY_REDEEM_STATUS, epoch_time);   // time when the coupon was redeemed in millis
 
         db.update(TABLE_COUPONS, cv, KEY_ID + "= '" + coupon.getCouponId() + "'", null);
 

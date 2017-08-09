@@ -13,6 +13,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -36,6 +37,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.aurelhubert.ahbottomnavigation.AHBottomNavigation;
@@ -68,6 +70,7 @@ import com.google.android.gms.location.LocationSettingsStatusCodes;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 
@@ -103,7 +106,7 @@ public class MainActivity extends BaseActivity
     @BindView(R.id.bottom_navigation) AHBottomNavigation bottomNavigation;
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
-
+    @BindView(R.id.empty_view)TextView empty_tv;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
@@ -111,6 +114,17 @@ public class MainActivity extends BaseActivity
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
+        sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                Context.MODE_PRIVATE);
+        String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
+
+        if(getSupportActionBar() != null) {
+            String title = sharedPreferences.getString(Constants.SharedPreferences.MALL_NAME, "OfferSky");
+            Log.i(TAG, "mall name = " + title);
+            setTitle(title);
+
+        }
 
         ButterKnife.bind(this);
 
@@ -138,13 +152,13 @@ public class MainActivity extends BaseActivity
 
         // TODO: Replace with proper implementation
         // Get mall
-        sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
-                Context.MODE_PRIVATE);
-        String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
+
 
         FirebaseUtils.getMall(this, mallId);
-        // Show loading dialog
+        // Show loading dialog if the connectivity is present
         showProgressDialog();
+
+        setupTestRecyclerView();
 
         // UI functions
         createTabLayout();
@@ -154,6 +168,8 @@ public class MainActivity extends BaseActivity
 
     @Override
     protected void onResume() {
+
+
         String earningStatus = sharedPreferences.getString(Constants.SharedPreferences.EARNING_STATUS,
                 Constants.SharedPreferences.NOT_EARNING);
         if (earningStatus.equals(Constants.SharedPreferences.EARNING)){
@@ -264,6 +280,7 @@ public class MainActivity extends BaseActivity
         }
 
         // Get the name of the item clicked in drawer and pass it along to the new filter activity
+        // TODO: add a constants interface for title and search terms
         else{
             Intent intent = new Intent(MainActivity.this, FilterActivity.class);
             intent.putExtra("Title", item.getTitle());
@@ -474,25 +491,76 @@ public class MainActivity extends BaseActivity
     private void setupTestRecyclerView(){
 
         Log.d(TAG, "setupTestRecyclerView()");
+
+
+
         final Comparator<Shop> ALPHABETICAL_COMPARATOR = new Comparator<Shop>() {
             @Override
             public int compare(Shop a, Shop b) {
                 return a.getName().compareTo(b.getName());
             }
         };
-        shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, new ShopItemClickListenerImplementation(this));
+        if(shopAdapter == null) {
+            shopAdapter = new ShopAdapter(this, Shop.class, ALPHABETICAL_COMPARATOR, new ShopItemClickListenerImplementation(this));
+        }
         recyclerView.setLayoutManager(new WrapContentLinearLayoutManager(this));
         recyclerView.setAdapter(shopAdapter);
 
         mModels = new ArrayList<>();
 
         Mall mall = OfferSkyUtils.getCurrentMall(this);
-        mModels.addAll(mall.getShops().values());
+
+        if(mall!=null) {
+            Collection<Shop> shopCollection = mall.getShops().values();
+            mModels.addAll(shopCollection);
+        }
         shopAdapter.edit().replaceAll(mModels)
                 .commit();
 
+        if(mModels.size() == 0 && !isNetworkAvailable(this)){
+            fab.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.GONE);
+            bottomNavigation.setVisibility(View.GONE);
+            empty_tv.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+            hideProgressDialog();
+        }
+        else{
+            fab.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.VISIBLE);
+            bottomNavigation.setVisibility(View.VISIBLE);
+            empty_tv.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+
     }
 
+    // Shows or hides ui elements according to internet connectivity
+    private void setUiState(){
+
+        if(!isNetworkAvailable(this)){
+            fab.setVisibility(View.GONE);
+            tabLayout.setVisibility(View.GONE);
+            bottomNavigation.setVisibility(View.GONE);
+            empty_tv.setVisibility(View.VISIBLE);
+            recyclerView.setVisibility(View.GONE);
+
+            //refresh the mall data
+            sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
+                    Context.MODE_PRIVATE);
+            String mallId = sharedPreferences.getString(Constants.SharedPreferences.MALL_ID, "MH_0253_CCM");
+
+            FirebaseUtils.getMall(this, mallId);
+
+        }
+        else{
+            fab.setVisibility(View.VISIBLE);
+            tabLayout.setVisibility(View.VISIBLE);
+            bottomNavigation.setVisibility(View.VISIBLE);
+            empty_tv.setVisibility(View.GONE);
+            recyclerView.setVisibility(View.VISIBLE);
+        }
+    }
 
     @Override
     public boolean onQueryTextSubmit(String query) {
@@ -522,6 +590,7 @@ public class MainActivity extends BaseActivity
         return filteredModelList;
     }
 
+    // filter shops into tabs
     private void startFilteringCategory(int position) {
 
         List<String> tabFilterCategories = new ArrayList<>();
@@ -529,10 +598,13 @@ public class MainActivity extends BaseActivity
             case 0:
                 switch (tabState){
                     case Shopping:
-                        tabFilterCategories.add("Formals");
-                        tabFilterCategories.add("Ethenic");
+                        /*tabFilterCategories.add("Formals");
+                        tabFilterCategories.add("Ethnic");
                         tabFilterCategories.add("Party wear");
-                        tabFilterCategories.add("Sports wear");
+                        tabFilterCategories.add("Sports wear");*/
+
+                        String fashionList[] = getResources().getStringArray(R.array.fashion);
+                        tabFilterCategories.addAll(Arrays.asList(fashionList));
                         break;
                     case Food:
                         tabFilterCategories.add("Meals");
@@ -549,8 +621,8 @@ public class MainActivity extends BaseActivity
                         tabFilterCategories.add("Electronics");
                         tabFilterCategories.add("Books & Music");
                         tabFilterCategories.add("Games");*/
-                        String fashionList[] = getResources().getStringArray(R.array.fashion);
-                        tabFilterCategories.addAll(Arrays.asList(fashionList));
+                        String lifestyleList[] = getResources().getStringArray(R.array.lifestyle);
+                        tabFilterCategories.addAll(Arrays.asList(lifestyleList));
                         break;
                     case Food:
                         tabFilterCategories.add("Cafe");
@@ -562,10 +634,13 @@ public class MainActivity extends BaseActivity
             case 2:
                 switch (tabState){
                     case Shopping:
-                        tabFilterCategories.add("Accessories");
+                        /*tabFilterCategories.add("Accessories");
                         tabFilterCategories.add("Jewellery");
                         tabFilterCategories.add("Bags");
-                        tabFilterCategories.add("Watches");
+                        tabFilterCategories.add("Watches");*/
+
+                        String accessoriesList[] = getResources().getStringArray(R.array.accessories);
+                        tabFilterCategories.addAll(Arrays.asList(accessoriesList));
                         break;
                     case Food:
                         tabFilterCategories.add("Ice cream");
@@ -634,7 +709,7 @@ public class MainActivity extends BaseActivity
     private BroadcastReceiver dataReadyReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            Log.d(TAG, "received DATA READY broadcast");
+            Log.d(TAG, "received DATA READY broadcast ");
             if(intent.getAction().equals(Constants.Broadcast.MALL_DATA_READY))
             {
                 hideProgressDialog();
@@ -650,12 +725,11 @@ public class MainActivity extends BaseActivity
 
                 //Set badge icon for event count
                 Mall mall = OfferSkyUtils.getCurrentMall(MainActivity.this);
-                String eventCount = mall.getEvents().size() + "";
-                Log.d(TAG, "event count obtained for badge = " + eventCount);
-                setBadgeCount(MainActivity.this, event_notification_icon, eventCount);
-            }
-            else if(intent.getAction().equals(Constants.Broadcast.VISITOR_DATA_READY)){
-                // Grab hold of the coupons according to the number
+                if(mall != null && mall.getEvents() != null) {
+                    String eventCount = mall.getEvents().size() + "";
+                    Log.d(TAG, "event count obtained for badge = " + eventCount);
+                    setBadgeCount(MainActivity.this, event_notification_icon, eventCount);
+                }
             }
 
         }
@@ -669,6 +743,28 @@ public class MainActivity extends BaseActivity
                     OfferSkyUtils.getCurrentMallId(MainActivity.this)) + "";
             Log.d(TAG, "coupon count obtained for badge = " + couponCount);
             setBadgeCount(MainActivity.this, coupon_notification_icon, couponCount);
+        }
+    };
+
+    private BroadcastReceiver internet_state_change_receiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            Log.d(TAG, "internet state change broadcast received");
+            final ConnectivityManager connMgr = (ConnectivityManager) context
+                    .getSystemService(Context.CONNECTIVITY_SERVICE);
+
+            final android.net.NetworkInfo wifi = connMgr
+                    .getNetworkInfo(ConnectivityManager.TYPE_WIFI);
+
+            final android.net.NetworkInfo mobile = connMgr
+                    .getNetworkInfo(ConnectivityManager.TYPE_MOBILE);
+
+            if (wifi.isAvailable() || mobile.isAvailable()) {
+                // Do something
+                //setUiState();
+
+                Log.d("Network Available ", "refreshing ui");
+            }
         }
     };
 
@@ -1075,6 +1171,8 @@ public class MainActivity extends BaseActivity
                 .registerReceiver(fabIconReceiver, new IntentFilter(Constants.Geofence.SHOW_EARNING_ICON));
         LocalBroadcastManager.getInstance(getApplicationContext())
                 .registerReceiver(fabIconReceiver, new IntentFilter(Constants.Geofence.SHOW_DEFAULT_ICON));
+        LocalBroadcastManager.getInstance(getApplicationContext())
+                .registerReceiver(internet_state_change_receiver, new IntentFilter(Constants.IntentFilter.INTERNET_CONNECTIVITY));
 
         if(isEarningSessionInProgress)
         {
@@ -1097,6 +1195,8 @@ public class MainActivity extends BaseActivity
         try {
             LocalBroadcastManager.getInstance(getApplicationContext())
                     .unregisterReceiver(fabIconReceiver);
+            LocalBroadcastManager.getInstance(getApplicationContext())
+                    .unregisterReceiver(internet_state_change_receiver);
         }
         catch (Exception e){
             Log.e(TAG, e.toString());

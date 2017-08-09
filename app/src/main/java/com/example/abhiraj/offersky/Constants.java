@@ -18,6 +18,9 @@ public class Constants {
         String SHOP_PHOTOS_LIST = "shop_photos";
     }
 
+    public interface IntentFilter{
+        String INTERNET_CONNECTIVITY = "android.net.conn.CONNECTIVITY_CHANGE";
+    }
     public interface Signup{
         String USER_DEFAULT_EMAIL_DOMAIN = "@offersky.com";
         String USER_DEFAULT_PASSWORD = "ds123456789";
@@ -63,6 +66,7 @@ public class Constants {
         static final String STEPS_FILE = "steps_file";
         static final String STEPS = "stores_steps";
         static final String MALL_ID = "mallId";
+        String MALL_NAME = "mallName";
         static final String USER_PREF_FILE = "user_pref_file";
         String EARNING_STATUS = "earning_status";
         String EARNING = "earning";

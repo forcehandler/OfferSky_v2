@@ -22,6 +22,7 @@
     <string name="title_activity_shop_details">ShopDetailsActivity</string>
 
     <string name="no_events">No events!!</string>
+    <string name= "check_internet">Check internet connection</string>
 
     <string name="internet_not_available">Connect to the internet</string>
     <string name="GPS_required_message">We require GPS to ensure best shopping experience for you. Please turn it on.</string>
@@ -45,6 +46,7 @@
     </array>
 
     <array name="accessories">
+        <item>Bags</item>
         <item>Electronics</item>
         <item>Jewellery</item>
         <item>Watches</item>
@@ -65,5 +67,17 @@
         <item>Meals</item>
         <item>Dessert</item>
         <item>Drinks</item>
+    </array>
+
+    <array name="dessert">
+        <item>Ice cream</item>
+        <item>Drinks</item>
+        <item>Dessert</item>
+    </array>
+
+    <array name="meals">
+        <item>Meals</item>
+        <item>South Indian</item>
+        <item>Chinese</item>
     </array>
 </resources>

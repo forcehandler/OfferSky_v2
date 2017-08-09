@@ -71,8 +71,10 @@ public class CouponUtils {
 
         CouponDbHandler db = new CouponDbHandler(context);
         String redeem_status = db.getRedeemStatus(coupon);
+        // 0 implies not redeemed
         if(redeem_status.equals("0"))
             return 0;
+        // anything else is the time in millis when the coupon was redeemed
         return 1;
     }
 

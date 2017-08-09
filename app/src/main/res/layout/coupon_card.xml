@@ -25,12 +25,12 @@
             android:padding="6dp"
             android:text="Test text"
             style="@style/Base.TextAppearance.AppCompat.Body1"/>
-        <Button
+        <!--<Button
             android:id="@+id/btn_get_code"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="Get Code"
-            style = "?attr/borderlessButtonStyle"/>
+            style = "?attr/borderlessButtonStyle"/>-->
         <TextView
             android:id="@+id/tv_expiration_time"
             android:layout_width="match_parent"
