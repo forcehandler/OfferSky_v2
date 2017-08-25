@@ -36,6 +36,7 @@ import com.example.abhiraj.offersky.model.Coupon;
 import com.example.abhiraj.offersky.model.Mall;
 import com.example.abhiraj.offersky.ui.MainActivity;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
+import com.example.abhiraj.offersky.utils.NotificationUtils;
 import com.example.abhiraj.offersky.utils.OfferSkyUtils;
 import com.squareup.picasso.Picasso;
 
@@ -148,7 +149,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(0);
                 Log.d(TAG, "sending first coupon to user and first milestone achieved");
-                 sendCouponNotification(coupon);
+                 //sendCouponNotification(coupon);
                 couponIssueStatus[0] = true;
 
             }
@@ -160,7 +161,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(1);
                 Log.d(TAG, "sending second coupon to user and first milestone achieved");
-                sendCouponNotification(coupon);
+                //sendCouponNotification(coupon);
                 couponIssueStatus[1] = true;
             }
         }
@@ -172,7 +173,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(2);
                 Log.d(TAG, "sending third coupon to user and third milestone achieved");
-                sendCouponNotification(coupon);
+                //sendCouponNotification(coupon);
                 couponIssueStatus[2] = true;
             }
         }
@@ -183,7 +184,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(3);
                 Log.d(TAG, "sending fourth coupon to user and first milestone achieved");
-                sendCouponNotification(coupon);
+                //sendCouponNotification(coupon);
                 couponIssueStatus[3] = true;
             }
         }
@@ -194,7 +195,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 Log.d(TAG, "coupons to offer size = " + couponsToOffer.size());
                 coupon = couponsToOffer.get(4);
                 Log.d(TAG, "sending fifth coupon to user and first milestone achieved");
-                sendCouponNotification(coupon);
+                //sendCouponNotification(coupon);
                 couponIssueStatus[4] = true;
             }
         }
@@ -203,6 +204,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
         if(coupon != null){
             Log.d(TAG, "adding coupon id = " + coupon.getCouponId() + " to the allottedCouponDb");
 
+            NotificationUtils.sendCustomCouponNotification(this, coupon);
             dbHandler.addCouponToAllottedList(coupon, getMallId());
 
             String timeOfAllotment = Calendar.getInstance().getTimeInMillis() + "";
@@ -408,43 +410,10 @@ public class StepListener extends Service implements SensorEventListener, Accele
             sensorManager.registerListener(this, accel, SensorManager.SENSOR_DELAY_FASTEST);
         }
 
-        /*if(hasStepCounter)
-        {
-            if(BuildConfig.DEBUG)
-            {
-                Log.d(TAG, "Ya'ay your device supports step counter");
-            }
 
-        }
-        else
-        {
-            if(BuildConfig.DEBUG)
-            {
-                Log.d(TAG, "Your device does not support step counter");
-            }
-        }
-        // Enable batching with delay of max  1 second
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-            sm.registerListener(this, sm.getDefaultSensor(Sensor.TYPE_STEP_COUNTER),
-                    SensorManager.SENSOR_DELAY_NORMAL, 1000);
-        }
-        else
-        {
-            if(BuildConfig.DEBUG)
-                Log.d(TAG, "You need to have device >= kitkat");
-        }*/
 
     }
 
-    /*private void publishSteps()
-    {
-        if(BuildConfig.DEBUG)
-            Log.d(TAG, "publish steps");
-        Intent intent = new Intent(Constants.Broadcasts.BROADCAST_STEPS);
-        intent.putExtra(Constants.Broadcasts.STEPS, steps+"");
-        LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
-        //sendEarningNotification(steps+"");
-    }*/
 
     public static void releaseWakeLock()
     {
@@ -457,7 +426,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
     }
 
 
-    public void sendCouponNotification(Coupon coupon){
+    /*public void sendCouponNotification(Coupon coupon){
 
         Log.i(TAG, "sendCouponNotification: " + coupon.getBrand());
 
@@ -490,12 +459,17 @@ public class StepListener extends Service implements SensorEventListener, Accele
         notificationMng.notify(
                 coupon.hashCode(),
                 notificationBuilder.build());
-    }
+    }*/
 
     public void sendEarningNotification(String title, String msg ) {
         Log.i(TAG, "sendEarningNotification: " + msg );
 
-        // Intent to start the main Activity
+        int notification_id = 1337;
+        Notification notification = NotificationUtils.getEarningNotification(this, title, msg, notification_id);
+        startForeground(notification_id, notification);
+
+
+        /*// Intent to start the main Activity
         Intent notificationIntent = new Intent(this, MainActivity.class);
 
 
@@ -510,11 +484,11 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 1337,
                 notification);
 
-        startForeground(1337, notification);        //to keep the service running even after power off
+        startForeground(1337, notification);        //to keep the service running even after power off*/
 
     }
 
-    private NotificationCompat.Builder createNotification(String title, String msg, PendingIntent notificationPendingIntent) {
+    /*private NotificationCompat.Builder createNotification(String title, String msg, PendingIntent notificationPendingIntent) {
 
         notificationBuilder
                 .setSmallIcon(R.mipmap.ic_launcher)
@@ -525,7 +499,7 @@ public class StepListener extends Service implements SensorEventListener, Accele
                 .setDefaults(Notification.DEFAULT_LIGHTS | Notification.DEFAULT_VIBRATE | Notification.DEFAULT_SOUND)
                 .setAutoCancel(true);
         return notificationBuilder;
-    }
+    }*/
 
     private void ignoreDozeOptimization() {
         PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
