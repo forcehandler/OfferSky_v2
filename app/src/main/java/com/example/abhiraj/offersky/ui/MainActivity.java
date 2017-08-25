@@ -46,6 +46,7 @@ import com.example.abhiraj.offersky.BaseActivity;
 import com.example.abhiraj.offersky.BuildConfig;
 import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
+import com.example.abhiraj.offersky.SmoothActionBarDrawerToggle;
 import com.example.abhiraj.offersky.WrapContentLinearLayoutManager;
 import com.example.abhiraj.offersky.adapter.ShopAdapter;
 import com.example.abhiraj.offersky.clickListener.ShopItemClickListenerImplementation;
@@ -90,13 +91,14 @@ public class MainActivity extends BaseActivity
     private static LayerDrawable coupon_notification_icon;
     private static LayerDrawable event_notification_icon;
 
+    private SmoothActionBarDrawerToggle mDrawerToggle;
+
     private TabState tabState = TabState.Shopping;
     private boolean isMallReady = false;
 
     private boolean isEarningSessionInProgress = false;
     private boolean isGeofenceBound = false;
 
-    private GeofenceService mGeofenceService;
 
     private SharedPreferences sharedPreferences;
 
@@ -107,13 +109,15 @@ public class MainActivity extends BaseActivity
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
     @BindView(R.id.empty_view)TextView empty_tv;
+    @BindView(R.id.drawer_layout) DrawerLayout mDrawerLayout;
+    @BindView(R.id.toolbar) Toolbar mToolbar;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         Log.d(TAG, "onCreate()");
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        mToolbar = (Toolbar) findViewById(R.id.toolbar);
+        setSupportActionBar(mToolbar);
 
         sharedPreferences = getSharedPreferences(Constants.SharedPreferences.USER_PREF_FILE,
                 Context.MODE_PRIVATE);
@@ -141,11 +145,17 @@ public class MainActivity extends BaseActivity
 
         fab.setOnClickListener(this);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+
+        //Replaced ActionBarDrawerToggle with its implementation SmoothActionBarDrawerToggle
+        //DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
-                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.setDrawerListener(toggle);
+                this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        //mDrawerLayout.setDrawerListener(toggle);
         toggle.syncState();
+
+        //DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        mDrawerToggle = new SmoothActionBarDrawerToggle(this, mDrawerLayout, mToolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        mDrawerLayout.addDrawerListener(mDrawerToggle);
 
         NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
         navigationView.setNavigationItemSelectedListener(this);
@@ -236,7 +246,7 @@ public class MainActivity extends BaseActivity
             Intent intent = new Intent(MainActivity.this, CouponActivity.class);
             startActivity(intent);
             return true;
-        }
+        } 
         else if(id == R.id.action_events){
             Log.d(TAG, "events clicked");
             Intent intent = new Intent(MainActivity.this, EventActivity.class);
@@ -257,27 +267,47 @@ public class MainActivity extends BaseActivity
             tab.select();
 
         } else if(id == R.id.nav_coupons){
-            Intent intent =  new Intent(MainActivity.this, CouponActivity.class);
-            startActivity(intent);
+
+            mDrawerToggle.runWhenIdle(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(MainActivity.this, CouponActivity.class);
+                    startActivity(intent);
+                }
+            });
+            mDrawerLayout.closeDrawers();
         } else if (id == R.id.nav_events) {
-            Intent intent = new Intent(MainActivity.this, EventActivity.class);
-            startActivity(intent);
+            mDrawerToggle.runWhenIdle(new Runnable() {
+                @Override
+                public void run() {
+                    Intent intent = new Intent(MainActivity.this, EventActivity.class);
+                    startActivity(intent);
+                }
+            });
+            mDrawerLayout.closeDrawers();
 
         } else if (id == R.id.nav_change_mall) {
             if(!isEarningSessionInProgress) {
-                Intent intent = new Intent(MainActivity.this, MallSelectActivity.class);
-                intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
-                startActivity(intent);
-                finish();
+
+                mDrawerToggle.runWhenIdle(new Runnable() {
+                    @Override
+                    public void run() {
+                        Intent intent = new Intent(MainActivity.this, MallSelectActivity.class);
+                        //intent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_NEW_TASK);
+                        startActivity(intent);
+                        //finish();
+                    }
+                });
+                mDrawerLayout.closeDrawers();
             }
 
-        } else if (id == R.id.nav_manage) {
+        } /*else if (id == R.id.nav_manage) {
 
         } else if (id == R.id.nav_share) {
 
         } else if (id == R.id.nav_send) {
 
-        }
+        }*/
 
         // Get the name of the item clicked in drawer and pass it along to the new filter activity
         // TODO: add a constants interface for title and search terms

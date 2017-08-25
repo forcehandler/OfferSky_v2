@@ -1,12 +1,16 @@
 package com.example.abhiraj.offersky.signup;
 
+import android.Manifest;
 import android.app.Dialog;
-import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.design.widget.TextInputLayout;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -22,6 +26,7 @@ import com.example.abhiraj.offersky.Constants;
 import com.example.abhiraj.offersky.R;
 import com.example.abhiraj.offersky.model.User;
 import com.example.abhiraj.offersky.ui.MallSelectActivity;
+import com.example.abhiraj.offersky.utils.CheckNetworkConnectivity;
 import com.example.abhiraj.offersky.utils.FirebaseUtils;
 import com.google.android.gms.auth.api.Auth;
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
@@ -376,46 +381,107 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
                 });
     }
 
-
+    String name;
+    String phoneNumber;
     private void createNewUser() {
         Log.d(TAG, "in createNewUser");
-        final String name = mNameEditText.getText().toString().trim();
-        final String phone = mPhoneEditText.getText().toString().trim();
+        name = mNameEditText.getText().toString().trim();
+        phoneNumber = mPhoneEditText.getText().toString().trim();
 
-        boolean validPhone = isValidPhone(phone);
+        boolean validPhone = isValidPhone(phoneNumber);
         boolean validName = isValidName(name);
         if (!validPhone || !validName){
             return;
         }
 
         //TODO: Implement OTP properly, currently only for testing purposes
-        mVerification = SendOtpVerification.createSmsVerification(this, phone, this, "91", true);
-        mVerification.initiate(); //sending otp on given number
+
 
         //TODO: storing user values when the values are sane, in later version
         //TODO: store values in preferences after OTP is matched
         // check internet connectivity
-        if(isNetworkAvailable(this)) {
+        CheckNetworkConnectivity networkConnectivity = new CheckNetworkConnectivity(new CheckNetworkConnectivity.ConnectionResponse(){
+
+            @Override
+            public void networkCheckResult(boolean isConnected) {
+                if(isConnected){
+                    createOTPVerificationDialog();
+                    requestOTP(false);
+                }
+                else{
+                    Snackbar.make(mNameEditText, R.string.check_internet, Snackbar.LENGTH_LONG).show();
+                }
+            }
+        }, this);
+        networkConnectivity.execute();
+        // TODO: Commented out for trying new connection check
+        /*if(isNetworkAvailable(this)) {
             createOTPVerificationDialog();
+            requestOTP(false);
+           *//* mVerification = SendOtpVerification.createSmsVerification(this, phone, this, "91", true);
+            mVerification.initiate(); //sending otp on given number*//*
         }
         else
         {
             Toast.makeText(this, "Check Internet Connectivity", Toast.LENGTH_SHORT).show();
+        }*/
+    }
+
+
+    private void requestOTP(boolean skipPermissionCheck){
+        Log.d(TAG, "requestOTP()");
+        if (!skipPermissionCheck && ContextCompat.checkSelfPermission(this, Manifest.permission.READ_SMS) ==
+                PackageManager.PERMISSION_DENIED) {
+            Log.d(TAG, "permission not available for sms, requesting");
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_SMS}, 0);
+        } else {
+            Log.d(TAG, "creating sms otp request and sending");
+            mVerification = SendOtpVerification.createSmsVerification
+                    (SendOtpVerification
+                            .config(getString(R.string.india_country_code) + phoneNumber)
+                            .context(this)
+                            .autoVerification(true)
+                            .build(), this);
+            mVerification.initiate();
+            Log.d(TAG, getString(R.string.india_country_code) + phoneNumber);
         }
+    }
+
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        } else {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(this, permissions[0])) {
+                Toast.makeText(this, "This application needs permission to read your SMS to automatically verify your "
+                        + "phone, you may disable the permission once you have been verified.", Toast.LENGTH_LONG)
+                        .show();
+            }
+            //enableInputField(true);
+        }
+        requestOTP(true);
     }
 
     private void createOTPVerificationDialog(){
 
         Log.d(TAG, "createOTPVerificationDialog()");
-        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        final AlertDialog.Builder builder = new AlertDialog.Builder(this);
 
         LayoutInflater inflater = this.getLayoutInflater();
         View dialogView = inflater.inflate(R.layout.otp_verification_dialog, null);
         final EditText otp_et = (EditText) dialogView.findViewById(R.id.otp_et);
         final TextView count_down_tv = (TextView) dialogView.findViewById(R.id.otp_countdown_tv);
+        final Button cancel_btn = (Button) dialogView.findViewById(R.id.cancel_otp_btn);
+        final Button resend_btn = (Button) dialogView.findViewById(R.id.resend_otp_btn);
+        final Button verify_btn = (Button) dialogView.findViewById(R.id.verify_otp_btn);
+
+        resend_btn.setEnabled(false);
+        resend_btn.setTextColor(ContextCompat.getColor(SignupActivity.this, R.color.deactivated_grey));
 
         builder.setView(dialogView);
-        builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
+
+
+
+        /*builder.setPositiveButton("Verify", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 if(otp_et.getText().toString().trim().equals("")){
@@ -429,15 +495,16 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
 
                 }
             }
-        });
-        builder.setNegativeButton("Change Number", new DialogInterface.OnClickListener() {
+        });*/
+        //TODO: for testing purposes only
+        /*builder.setNegativeButton("Change Number", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Log.d(TAG, "user decided to change number");
                 dialogInterface.dismiss();
             }
-        });
-        builder.setNeutralButton("Resend OTP", new DialogInterface.OnClickListener() {
+        });*/
+        /*builder.setNeutralButton("Resend OTP", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 Log.d(TAG, "resending OTP");
@@ -445,19 +512,54 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
                     mVerification.verify(mOtpEditText.getText().toString());
                 }
             }
-        });
+        });*/
 
-        builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
+       /* builder.setOnDismissListener(new DialogInterface.OnDismissListener() {
             @Override
             public void onDismiss(DialogInterface dialogInterface) {
 
             }
-        });
+        });*/
 
         final AlertDialog otpDialog = builder.create();
 
         otpDialog.show();
         otpDialog.setCancelable(false);
+
+        // listeners for custom dialog buttons
+        verify_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                if(otp_et.getText().toString().trim().equals("")){
+                    Log.d(TAG, otp_et.getText().toString().equals(null) + " " + mOtpEditText.getText().toString());
+                    otp_et.setError("Please enter the otp");
+                }
+                else{
+                    // for manual verification
+                    if(mVerification != null) {
+                        mVerification.verify(otp_et.getText().toString());
+                    }
+                }
+            }
+        });
+
+        resend_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d(TAG, "resending OTP");
+                if(mVerification != null) {
+                    mVerification.resend("voice");
+                }
+            }
+        });
+
+        cancel_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                otpDialog.dismiss();
+            }
+        });
+
 
         otpDialog.getButton(Dialog.BUTTON_NEUTRAL).setEnabled(false);
         new CountDownTimer(30000, 1000) {
@@ -468,8 +570,10 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
             }
 
             public void onFinish() {
-                otpDialog.getButton(Dialog.BUTTON_NEUTRAL).setEnabled(true);
-                count_down_tv.setVisibility(View.GONE);
+                /*otpDialog.getButton(Dialog.BUTTON_NEUTRAL).setEnabled(true);*/
+                resend_btn.setEnabled(true);
+                resend_btn.setTextColor(ContextCompat.getColor(SignupActivity.this, R.color.holo_red_dark));
+                count_down_tv.setVisibility(View.INVISIBLE);
             }
 
         }.start();
@@ -495,6 +599,7 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
         Toast.makeText(this, "verification successful", Toast.LENGTH_LONG).show();
         authentication_route = 0;
         createAnonymousUser();
+        showProgressDialog();
     }
 
     @Override
@@ -587,6 +692,7 @@ public class SignupActivity extends BaseActivity implements View.OnClickListener
         else // If login fails
         {
             Toast.makeText(this, "Login failed", Toast.LENGTH_LONG).show();
+            hideProgressDialog();
         }
     }
     // [END handleSignInResult]

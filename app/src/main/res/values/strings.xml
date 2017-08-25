@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">OfferSkyDebug</string>
+    <string name="sendotp_key">138046AvQLZw7B588243c3</string>
 
+    <string name="india_country_code">91</string>
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
 
@@ -32,6 +34,7 @@
     <string name="select_diff_mall_message">Please select the mall you are currently in.</string>
 
     <string name="checking_mall">Verifying presence in mall.</string>
+
 
     <array name="fashion">
         <item>Formals</item>
